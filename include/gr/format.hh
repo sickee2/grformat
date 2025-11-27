@@ -115,11 +115,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <gr/string.hh>
-// #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
-// #include <type_traits>
 #include <utility>
 
 #include <gr/detail/toy_charconv.hh>
@@ -1075,7 +1073,6 @@ template <size_t N> struct formatter<char[N]> {
 template <> struct formatter<const char *> {
   void operator()(format_output &out, const char *value,
                   const format_spec &spec) const {
-    // std::cout << "format char *" << std::endl;
     if (spec.type == 'p') {
       format_pointer(out, value, spec);
     } else {
