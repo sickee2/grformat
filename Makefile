@@ -1,52 +1,52 @@
-# 编译器设置
+# Compiler settings
 # CXX = g++
 CXX = clang++
 CXXFLAGS = -O2 -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -Iinclude
 # CXXFLAGS = -g -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -Iinclude
 
-# 目标可执行文件
+# Target executable
 TARGET = grstr
 
-# 源文件
+# Source files
 SRC_DIR = src
 CPP_SRC = $(SRC_DIR)/main.cpp \
 	 $(SRC_DIR)/gr/utf_sequence.cpp \
 	 $(SRC_DIR)/gr/utf_string.cpp
 
-	 # $(SRC_DIR)/format.cpp
 
-# 构建目录
+# Build directory
 BUILD_DIR = build_out
 # OBJ = $(BUILD_DIR)/main.o
 OBJECTS = $(CPP_SRC:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
-# 依赖文件
+# Dependency files
 DEP_DIR = $(BUILD_DIR)/.deps
 
-# 检测操作系统
+# Detect operating system
 UNAME_S := $(shell uname -s)
+MSYSTEM := $(shell echo $$MSYSTEM 2>/dev/null)
 
-# 根据操作系统设置链接选项
+# Set linker flags based on operating system
 ifeq ($(UNAME_S), Linux)
     LDFLAGS = $(shell pkg-config --libs re2) -liconv
 else
     LDFLAGS = $(shell pkg-config --libs re2) -liconv
 endif
 
-# 默认目标
+# Default target
 all: $(BUILD_DIR) $(TARGET)
 
-# 创建构建目录
+# Create build directory
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)/gr
 
-# 编译
+# Compile
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# 链接
+# Link
 $(TARGET): $(OBJECTS)
 	@echo linking...
 	@$(CXX) $^ -o $@ $(LDFLAGS)
