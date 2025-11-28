@@ -2,7 +2,6 @@
 .xmake/
 .vscode
 build/
-build_out/
 clangd/
 
 src/main.cpp

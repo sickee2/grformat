@@ -4,8 +4,11 @@ CXX = clang++
 CXXFLAGS = -O2 -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -Iinclude
 # CXXFLAGS = -g -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -Iinclude
 
+# Build directory
+BUILD_DIR = build
+
 # Target executable
-TARGET = grstr
+TARGET = $(BUILD_DIR)/grstr
 
 # Source files
 SRC_DIR = src
@@ -14,8 +17,6 @@ CPP_SRC = $(SRC_DIR)/main.cpp \
 	 $(SRC_DIR)/gr/utf_string.cpp
 
 
-# Build directory
-BUILD_DIR = build_out
 # OBJ = $(BUILD_DIR)/main.o
 OBJECTS = $(CPP_SRC:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
