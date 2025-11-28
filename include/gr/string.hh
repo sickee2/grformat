@@ -533,7 +533,6 @@ public:
    * @return Reference to modified view
    * @post View will contain no leading/trailing Unicode whitespace
    */
-  [[nodiscard]]
   utf_view &utrim();
 
   /**
@@ -541,7 +540,6 @@ public:
    * @return Reference to modified view
    * @post View will contain no leading Unicode whitespace
    */
-  [[nodiscard]]
   utf_view &utrim_left();
 
   /**
@@ -549,7 +547,6 @@ public:
    * @return Reference to modified view
    * @post View will contain no trailing Unicode whitespace
    */
-  [[nodiscard]]
   utf_view &utrim_right();
 
   /**
@@ -558,7 +555,6 @@ public:
    * @post View will contain no leading/trailing whitespace
    */
 
-  [[nodiscard]]
   utf_view &trim();
 
   /**
@@ -566,7 +562,6 @@ public:
    * @return Reference to modified view
    * @post View will contain no leading/trailing whitespace
    */
-  [[nodiscard]]
   utf_view &trim_left();
 
   /**
@@ -574,7 +569,6 @@ public:
    * @return Reference to modified view
    * @post View will contain no leading/trailing whitespace
    */
-  [[nodiscard]]
   utf_view &trim_right();
 
   /**
