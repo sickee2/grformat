@@ -267,6 +267,7 @@ inline sstov_result stoi_pow2_base_u(const char *&first, const char *last,
   const int shift = IsOctal ? 3 : (base == 2 ? 1 : 4);
   const UnsignedType max_safe =
       std::numeric_limits<UnsignedType>::max() >> shift;
+  result = 0;
   UnsignedType pre_result = 0;
 
   while (first < last) {
@@ -895,7 +896,7 @@ inline int get_sign_for_sstov(const char* &first){
 
 /**
  * @brief this tool is a clone as std::from_chars(...)
- * @note don't use this in product-works, this is only for testing and studying
+ * @note when errcode genrated, value should set zero
  */
 template <typename integer_type>
 inline sstov_result sstoi(const char *first, const char *last, integer_type &value,
@@ -903,7 +904,9 @@ inline sstov_result sstoi(const char *first, const char *last, integer_type &val
   static_assert(detail::supports_integer_v<integer_type>,
                 "Only integral types supported");
 
+
   if (last <= first || base < 2 || base > 36) {
+    value = 0;
     return {first, std::errc::invalid_argument};
   }
 
@@ -917,10 +920,6 @@ inline sstov_result sstoi(const char *first, const char *last, integer_type &val
       ++first;
     }
   }
-
-  // if (first >= last) {
-  //   return {first, std::errc::invalid_argument};
-  // }
 
   using unsigned_type = detail::make_unsigned_t<integer_type>;
   unsigned_type result = 0;
@@ -947,13 +946,12 @@ inline sstov_result sstoi(const char *first, const char *last, integer_type &val
         return {status.ptr, std::errc::result_out_of_range};
       }
       value = -integer_type(result);
+    } else {
+      if (result > unsigned_type(std::numeric_limits<integer_type>::max())) {
+        return {status.ptr, std::errc::result_out_of_range};
+      }
+      value = integer_type(result);
     }
-    // else {
-    //   if (result > unsigned_type(std::numeric_limits<integer_type>::max())) {
-    //     return {status.ptr, std::errc::result_out_of_range};
-    //   }
-    //   value = integer_type(result);
-    // }
   } else {
     value = integer_type(result); // unsigned_type
   }
