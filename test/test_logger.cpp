@@ -2,7 +2,7 @@
 #include <gr/logger.hh>
 #include <gr/string.hh>
 
-int main() {
+void test_logger(){
   using namespace gr;
   using namespace gr::literals;
 
@@ -29,6 +29,5 @@ int main() {
   // 创建不同名称的日志记录器
   auto network_logger = gr::log::logger_manager::get_logger("network");
   network_logger->info("网络连接已建立");
-
-  return 0;
 }
+

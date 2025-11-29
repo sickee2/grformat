@@ -15,7 +15,7 @@ struct TestObject {
   }
 };
 
-void test_construction() {
+void test_cptr_construction() {
   std::cout << "=== 测试构造和析构 ===\n";
 
   // 默认构造
@@ -33,7 +33,7 @@ void test_construction() {
   std::cout << "✓ 构造和析构测试通过\n";
 }
 
-void test_move_semantics() {
+void test_cptr_move_semantics() {
   std::cout << "=== 测试移动语义 ===\n";
 
   auto ptr1 = gr::utils::cptr<TestObject>::make(100, "move_test");
@@ -53,7 +53,7 @@ void test_move_semantics() {
   std::cout << "✓ 移动语义测试通过\n";
 }
 
-void test_pointer_operations() {
+void test_cptr_pointer_operations() {
   std::cout << "=== 测试指针操作 ===\n";
 
   auto ptr = gr::utils::cptr<TestObject>::make(999, "operations");
@@ -76,7 +76,7 @@ void test_pointer_operations() {
   std::cout << "✓ 指针操作测试通过\n";
 }
 
-void test_reset_functionality() {
+void test_cptr_reset_functionality() {
   std::cout << "=== 测试重置功能 ===\n";
 
   auto ptr = gr::utils::cptr<TestObject>::make(1, "original");
@@ -96,7 +96,7 @@ void test_reset_functionality() {
   std::cout << "✓ 重置功能测试通过\n";
 }
 
-void test_clone_functionality() {
+void test_cptr_clone_functionality() {
   std::cout << "=== 测试克隆功能 ===\n";
 
   auto original = gr::utils::cptr<TestObject>::make(123, "clone_test");
@@ -117,7 +117,7 @@ void test_clone_functionality() {
   std::cout << "✓ 克隆功能测试通过\n";
 }
 
-void test_swap_functionality() {
+void test_cptr_swap_functionality() {
   std::cout << "=== 测试交换功能 ===\n";
 
   auto ptr1 = gr::utils::cptr<TestObject>::make(1, "first");
@@ -133,7 +133,7 @@ void test_swap_functionality() {
   std::cout << "✓ 交换功能测试通过\n";
 }
 
-void test_global_make_function() {
+void test_cptr_global_make_function() {
   std::cout << "=== 测试全局make函数 ===\n";
 
   // 使用命名空间内的make_cptr
@@ -147,7 +147,7 @@ void test_global_make_function() {
   std::cout << "✓ 全局make函数测试通过\n";
 }
 
-void test_edge_cases() {
+void test_cptr_edge_cases() {
   std::cout << "=== 测试边界情况 ===\n";
 
   // 测试空指针操作
@@ -169,24 +169,24 @@ void test_edge_cases() {
   std::cout << "✓ 边界情况测试通过\n";
 }
 
-int main() {
+void test_cptr(){
   try {
     std::cout << "开始测试 utils::cptr 类...\n\n";
 
-    test_construction();
-    test_move_semantics();
-    test_pointer_operations();
-    test_reset_functionality();
-    test_clone_functionality();
-    test_swap_functionality();
-    test_global_make_function();
-    test_edge_cases();
+    test_cptr_construction();
+    test_cptr_move_semantics();
+    test_cptr_pointer_operations();
+    test_cptr_reset_functionality();
+    test_cptr_clone_functionality();
+    test_cptr_swap_functionality();
+    test_cptr_global_make_function();
+    test_cptr_edge_cases();
 
     std::cout << "\n🎉 所有测试通过！\n";
-    return 0;
+    return;
 
   } catch (const std::exception &e) {
     std::cerr << "❌ 测试失败: " << e.what() << std::endl;
-    return 1;
+    return;
   }
 }

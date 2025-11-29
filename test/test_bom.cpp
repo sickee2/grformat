@@ -1,7 +1,7 @@
 #include <gr/string.hh>
 #include <gr/console.hh>
 
-void bom_example() {
+void test_bom() {
   using namespace gr::str;
   using namespace gr::literals;
   // Detect BOM
@@ -26,7 +26,3 @@ void bom_example() {
   gr::console::writeln(utf16_str.to_u8());
 }
 
-int main(){
-  bom_example();
-  return 0;
-}

@@ -180,7 +180,7 @@ public:
   }
 };
 
-int main() {
+void test_utf_iter_performance(){
   using namespace gr;
   using namespace std;
   using namespace gr::literals;
@@ -232,5 +232,4 @@ int main() {
   }else{
     console::writeln("convert completed!");
   }
-  return 0;
 }

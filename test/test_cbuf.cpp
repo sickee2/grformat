@@ -10,7 +10,7 @@ struct TestPOD {
   char name[16];
 };
 
-void test_construction() {
+void test_cbuf_construction() {
   std::cout << "=== 测试构造和析构 ===\n";
 
   // 默认构造
@@ -30,7 +30,7 @@ void test_construction() {
   std::cout << "✓ 构造和析构测试通过\n";
 }
 
-void test_move_semantics() {
+void test_cbuf_move_semantics() {
   std::cout << "=== 测试移动语义 ===\n";
 
   auto buf1 = gr::utils::cbuf<int>::create(5);
@@ -57,7 +57,7 @@ void test_move_semantics() {
   std::cout << "✓ 移动语义测试通过\n";
 }
 
-void test_element_access() {
+void test_cbuf_element_access() {
   std::cout << "=== 测试元素访问 ===\n";
 
   auto buf = gr::utils::cbuf<double>::create(8);
@@ -79,7 +79,7 @@ void test_element_access() {
   std::cout << "✓ 元素访问测试通过\n";
 }
 
-void test_iterators() {
+void test_cbuf_iterators() {
   std::cout << "=== 测试迭代器 ===\n";
 
   auto buf = gr::utils::cbuf<int>::create(6);
@@ -106,7 +106,7 @@ void test_iterators() {
   std::cout << "✓ 迭代器测试通过\n";
 }
 
-void test_reallocation() {
+void test_cbuf_reallocation() {
   std::cout << "=== 测试重新分配 ===\n";
 
   auto buf = gr::utils::cbuf<int>::create(5);
@@ -140,7 +140,7 @@ void test_reallocation() {
   std::cout << "✓ 重新分配测试通过\n";
 }
 
-void test_clone_functionality() {
+void test_cbuf_clone_functionality() {
   std::cout << "=== 测试克隆功能 ===\n";
 
   auto original = gr::utils::cbuf<TestPOD>::create(4);
@@ -175,7 +175,7 @@ void test_clone_functionality() {
   std::cout << "✓ 克隆功能测试通过\n";
 }
 
-void test_swap_functionality() {
+void test_cbuf_swap_functionality() {
   std::cout << "=== 测试交换功能 ===\n";
 
   auto buf1 = gr::utils::cbuf<int>::create(3);
@@ -200,7 +200,7 @@ void test_swap_functionality() {
   std::cout << "✓ 交换功能测试通过\n";
 }
 
-void test_fillzero_and_bytes() {
+void test_cbuf_fillzero_and_bytes() {
   std::cout << "=== 测试填充零和字节计算 ===\n";
 
   auto buf = gr::utils::cbuf<int>::create(8);
@@ -224,7 +224,7 @@ void test_fillzero_and_bytes() {
   std::cout << "✓ 填充零和字节计算测试通过\n";
 }
 
-void test_detach_and_release() {
+void test_cbuf_detach_and_release() {
   std::cout << "=== 测试分离和释放 ===\n";
 
   auto buf = gr::utils::cbuf<int>::create(6);
@@ -257,7 +257,7 @@ void test_detach_and_release() {
   std::cout << "✓ 分离和释放测试通过\n";
 }
 
-void test_edge_cases() {
+void test_cbuf_edge_cases() {
   std::cout << "=== 测试边界情况 ===\n";
 
   // 测试零大小缓冲区
@@ -285,26 +285,26 @@ void test_edge_cases() {
   std::cout << "✓ 边界情况测试通过\n";
 }
 
-int main() {
+void test_cbuf(){
   try {
     std::cout << "开始测试 utils::cbuf 类...\n\n";
 
-    test_construction();
-    test_move_semantics();
-    test_element_access();
-    test_iterators();
-    test_reallocation();
-    test_clone_functionality();
-    test_swap_functionality();
-    test_fillzero_and_bytes();
-    test_detach_and_release();
-    test_edge_cases();
+    test_cbuf_construction();
+    test_cbuf_move_semantics();
+    test_cbuf_element_access();
+    test_cbuf_iterators();
+    test_cbuf_reallocation();
+    test_cbuf_clone_functionality();
+    test_cbuf_swap_functionality();
+    test_cbuf_fillzero_and_bytes();
+    test_cbuf_detach_and_release();
+    test_cbuf_edge_cases();
 
     std::cout << "\n🎉 所有测试通过！\n";
-    return 0;
+    return;
 
   } catch (const std::exception &e) {
     std::cerr << "❌ 测试失败: " << e.what() << std::endl;
-    return 1;
+    return;
   }
 }

@@ -53,7 +53,7 @@ void comprehensive_chrono_test() {
 
   console::writeln("=== Testing explicit indexing with nested format ===");
   for (int i = 0; i < 5; i++) {
-    console::writeln("|{1:>{0}d}{2:>{3}d}", i + 1, i, '|', 5 - i);
+    console::writeln("|{1:>{0}d}{2:>{3}}", i + 1, i, '|', 5 - i);
   }
 
   console::writeln("=== Testing automatic indexing with nested format ===");
@@ -130,8 +130,7 @@ struct gr::toy::detail::formatter<MyCustomType> {
   }
 };
 
-int main() {
-
+void test_toy_format(){
   comprehensive_chrono_test();
   MyType obj{42, "test"};
   gr::console::writeln("OBJ: {}", obj);
@@ -141,6 +140,4 @@ int main() {
   gr::console::writeln("{:simple}", obj2);
   gr::console::writeln("{:v}", obj2);
   gr::console::writeln("{}", obj2);
-
-  return 0;
 }

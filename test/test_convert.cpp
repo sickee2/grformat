@@ -77,7 +77,7 @@ std::vector<char16_t> generate_test_data(size_t count) {
 
 // Performance test function
 template <typename Func>
-void benchmark(const std::string &name, Func &&func,
+void utf_benchmark(const std::string &name, Func &&func,
                const std::vector<char16_t> &test_data, int iterations = 1000) {
   auto start = std::chrono::high_resolution_clock::now();
 
@@ -162,32 +162,14 @@ bool validate_correctness() {
   return all_passed;
 }
 
-void quick_test() {
-    std::cout << "Quick test fix\n";
-
-    // Test simple ASCII string
-    const char16_t test_ascii[] = u"Hello";
-    gr::str::u16v view_ascii(test_ascii, 5);
-
-    auto result_optimized = to_utf8_optimized(view_ascii);
-    std::cout << "ASCII test: '" << result_optimized << "'\n";
-
-    // Test single character
-    const char16_t test_single[] = u"A";
-    gr::str::u16v view_single(test_single, 1);
-
-    auto result_single = to_utf8_optimized(view_single);
-    std::cout << "Single character test: '" << result_single << "'\n";
-}
-
-int main() {
+void test_utf_convert(){
   std::cout << "UTF-16 to UTF-8 Conversion Performance Comparison Test\n";
   std::cout << "================================\n" << std::endl;
 
   // Validate correctness
   if (!validate_correctness()) {
     std::cerr << "Correctness validation failed, stopping performance test" << std::endl;
-    return 1;
+    return;
   }
 
   // Generate test data of different sizes
@@ -210,8 +192,8 @@ int main() {
     int iterations = std::max(
         1000, static_cast<int>(100000 / size)); // Adjust iterations based on data size
 
-    benchmark("Original method (uc::iter)", to_utf8_original, test_data, iterations);
-    benchmark("Optimized method (uc::sequence)", to_utf8_optimized, test_data,
+    utf_benchmark("Original method (uc::iter)", to_utf8_original, test_data, iterations);
+    utf_benchmark("Optimized method (uc::sequence)", to_utf8_optimized, test_data,
               iterations);
 
     // Calculate performance improvement
@@ -264,6 +246,4 @@ int main() {
     std::cout << "Optimized method - capacity: " << result_opt.capacity()
               << " bytes, size: " << result_opt.size() << " bytes\n";
   }
-
-  return 0;
 }

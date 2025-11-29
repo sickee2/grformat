@@ -494,8 +494,8 @@ void test_real_world_scenarios() {
     }
   }
 }
-int main() {
 
+void test_toy_format_preformance(){
   gr::console::write(
       "Starting std::format vs toy::format efficiency comparison test\n\n");
 
@@ -511,8 +511,5 @@ int main() {
   test_format_specifier_performance();
   test_real_world_scenarios();
   gr::console::write("\nTest completed\n");
-
-  // using namespace gr::literals;
-  // std::cout << "{:.5}"_fmt("0123456789") << std::endl;;
-  return 0;
 }
+

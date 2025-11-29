@@ -127,10 +127,9 @@ void debug_swap_bytes() {
             << std::endl;
 }
 
-int main() {
+void test_endian(){
   debug_basic_conversion();
   debug_utf16_conversion();
   debug_utf16_iterator();
   debug_swap_bytes();
-  return 0;
 }

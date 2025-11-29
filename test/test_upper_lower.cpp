@@ -220,7 +220,8 @@ void debug_latin_extended() {
               << std::endl;
   }
 }
-int main() {
+
+void test_upper_lower(){
   std::cout << "Starting UTF iterator case conversion tests..." << std::endl;
 
   try {
@@ -236,12 +237,10 @@ int main() {
     test_case_conversion_round_trip();
     test_comprehensive_unicode_samples();
     std::cout << "\n✅ All tests passed successfully!" << std::endl;
-    return 0;
   } catch (const std::exception &e) {
     std::cerr << "\n❌ Test failed: " << e.what() << std::endl;
-    return 1;
   } catch (...) {
     std::cerr << "\n❌ Unknown test failure!" << std::endl;
-    return 1;
   }
 }
+

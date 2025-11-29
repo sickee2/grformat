@@ -72,7 +72,7 @@ void test_multibyte_utf8() {
   }
 }
 
-void test_edge_cases() {
+void test_utfiter_edge_cases() {
   std::cout << "\n=== 测试边界情况 ===" << std::endl;
 
   // 空字符串测试
@@ -235,11 +235,11 @@ void test_position_and_status() {
   std::cout << "✓ 位置和状态测试通过" << std::endl;
 }
 
-int main() {
-  try {
+void test_utf_iter(){
+try {
     test_basic_ascii();
     test_multibyte_utf8();
-    test_edge_cases();
+    test_utfiter_edge_cases();
     test_error_handling();
     test_bidirectional_iteration();
     test_encoding_conversion();
@@ -247,12 +247,10 @@ int main() {
     test_position_and_status();
 
     std::cout << "\n🎉 所有测试通过!" << std::endl;
-    return 0;
   } catch (const std::exception &e) {
     std::cerr << "测试失败: " << e.what() << std::endl;
-    return 1;
   } catch (...) {
     std::cerr << "未知测试失败" << std::endl;
-    return 1;
   }
 }
+

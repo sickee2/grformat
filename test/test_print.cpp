@@ -47,7 +47,7 @@ public:
 
 void test_gr_println_optimizations() {
   const int ITERATIONS = 100;
-  std::println("\n=== gr::println 长文本优化测试 ===");
+  std::println("\n=== gr::println long string testing ===");
 
   // 测试原始性能
   {
@@ -73,21 +73,21 @@ void test_gr_println_optimizations() {
   }
   // 测试不同长度的文本
   {
-    Timer timer("console::writeln 短文本");
+    Timer timer("console::writeln short string test");
     for (int i = 0; i < ITERATIONS; ++i) {
       console::writeln("Short: {}", i);
     }
   }
 
   {
-    Timer timer("std::println 短文本");
+    Timer timer("std::println short string test");
     for (int i = 0; i < ITERATIONS; ++i) {
       std::println("Short: {}", i);
     }
   }
 
   {
-    Timer timer("console::writeln 中文本");
+    Timer timer("console::writeln middle string test");
     for (int i = 0; i < ITERATIONS; ++i) {
       console::writeln("Medium length text with some data: {} and more: {}", i,
                     i * 2);
@@ -95,7 +95,7 @@ void test_gr_println_optimizations() {
   }
 
   {
-    Timer timer("std::println 中文本");
+    Timer timer("std::println middle string test");
     for (int i = 0; i < ITERATIONS; ++i) {
       std::println("Medium length text with some data: {} and more: {}", i,
                    i * 2);
@@ -103,7 +103,7 @@ void test_gr_println_optimizations() {
   }
 
   {
-    Timer timer("console::writeln 长文本");
+    Timer timer("console::writeln very long string");
     for (int i = 0; i < ITERATIONS; ++i) {
       console::writeln("Very long text with many parameters: {}, {}, {}, {}, {}, "
                     "{}, {}, {}, {}, {}",
@@ -113,7 +113,7 @@ void test_gr_println_optimizations() {
   }
 
   {
-    Timer timer("std::println 长文本");
+    Timer timer("std::println very long string");
     for (int i = 0; i < ITERATIONS; ++i) {
       std::println("Very long text with many parameters: {}, {}, {}, {}, {}, "
                    "{}, {}, {}, {}, {}",
@@ -123,9 +123,9 @@ void test_gr_println_optimizations() {
   }
 }
 
-int main() {
-  console::writeln("开始性能测试...");
+void test_print(){
+  console::writeln("start test...");
   test_gr_println_optimizations();
   g_collector.print_report();
-  console::writeln("性能测试完成!");
+  console::writeln("test end!");
 }

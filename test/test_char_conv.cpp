@@ -1,12 +1,11 @@
 #include "gr/detail/toy_charconv.hh"
-#include "gr/format.hh"
 #include <cstdint>
 #include <gr/console.hh>
 #include <gr/performance_timer.hh>
 #include <stdexcept>
 using namespace gr;
 
-void test_permance() {
+void test_chars_conv_performance() {
   int iteration = 10000;
   {
     double data[] = {
@@ -147,29 +146,3 @@ void test_permance() {
   }
 }
 
-int main() {
-  test_permance();
-  console::writeln("\n===============================");
-  // test_sstoi_boundary();
-  // console::writeln(" str check: {}\n cal int part: {}\n cal frac part: {}\n
-  // cal exp part: {}",
-  //                  check_timer, calculate_int_part_timer,
-  //                  calculate_frac_part_timer, calculate_exponet_timer);
-
-  console::writeln("\n===============================");
-  gr::str::u8v data("-01");
-
-  // data = "-123.4567e-02";
-  data = "2345e-5";
-
-  double value;
-  console::writeln("original str: {}", data);
-  auto res = toy::sstof(data.data(), data.size(), value);
-  console::writeln("value: {}", value);
-  console::writeln("remaining: {}", res.ptr);
-
-  console::writeln("\n===============================");
-  char ch[4] = "inf"; 
-  console::writeln("=> {}", ch);
-  return 0;
-}

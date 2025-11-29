@@ -36,7 +36,7 @@ public:
   }
 };
 
-int main() {
+void test_stoi(){
   using namespace gr;
   
   // 性能测试
@@ -172,37 +172,35 @@ int main() {
   console::writeln("\n=== overflow test ===");
   // 无符号溢出测试
   const char* unsigned_overflow_cases[] = {
-    "999999999999999999999999999",  // 明显溢出
-    "18446744073709551616",         // 刚好超过uint64_t最大值
+    "999999999999999999999999999",
+    "18446744073709551616",         // over than uint64_t max
   };
 
   for (const auto& str : unsigned_overflow_cases) {
     uint64_t value;
     auto res = gr::toy::sstoi(str, str + strlen(str), value, 10);
-    console::writeln("测试 '{}': ec = {}, value = {}", str, static_cast<int>(res.ec), value);
+    console::writeln("test '{}': ec = {}, value = {}", str, static_cast<int>(res.ec), value);
     if (res.ec == std::errc::result_out_of_range) {
-      console::writeln("✓ 正确检测到溢出: {}", str);
+      console::writeln("✓ catch overflow: {}", str);
     } else {
-      console::errorln("✗ 未能检测到溢出: {}", str);
+      console::errorln("✗ not catch overflow: {}", str);
     }
   }
 
   // 有符号溢出测试
   const char* signed_overflow_cases[] = {
-    "-9223372036854775809",         // 刚好超过int64_t最小值
-    "9223372036854775808",          // 刚好超过int64_t最大值
+    "-9223372036854775809",         // small than int64_t min
+    "9223372036854775808",          // great than int64_t max
   };
 
   for (const auto& str : signed_overflow_cases) {
-    int64_t value;  // 使用有符号类型
+    int64_t value;
     auto res = gr::toy::sstoi(str, str + strlen(str), value, 10);
-    console::writeln("测试 '{}': ec = {}, value = {}", str, static_cast<int>(res.ec), value);
+    console::writeln("test '{}': ec = {}, value = {}", str, static_cast<int>(res.ec), value);
     if (res.ec == std::errc::result_out_of_range) {
-      console::writeln("✓ 正确检测到溢出: {}", str);
+      console::writeln("✓ catch overflow: {}", str);
     } else {
-      console::errorln("✗ 未能检测到溢出: {}", str);
+      console::errorln("✗ not catch overflow: {}", str);
     }
   }
-
-  return 0;
 }

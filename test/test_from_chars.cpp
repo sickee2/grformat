@@ -6,7 +6,7 @@
 using namespace gr;
 namespace term = gr::console;
 
-void test() {
+void test_from_chars() {
   // 整数测试用例
   int64_t int_test_values[] = {0,    1,          -1,         123,
                                -456, 1234567890, -987654321, 255,
@@ -252,7 +252,3 @@ void test() {
   }
 }
 
-int main() {
-  test();
-  return 0;
-}

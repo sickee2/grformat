@@ -272,7 +272,7 @@ void test_validation() {
   gr::console::writeln("✓ All validation tests passed");
 }
 
-int main() {
+void test_utf_string(){
   try {
     test_constructors();
     test_assignment_operators();
@@ -289,9 +289,9 @@ int main() {
     test_validation();
 
     gr::console::writeln("\n🎉 All tests passed successfully!");
-    return 0;
   } catch (const std::exception &e) {
     gr::console::errorln("❌ Test failed: {}", e.what());
-    return 1;
   }
+
 }
+

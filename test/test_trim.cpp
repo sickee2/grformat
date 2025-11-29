@@ -261,7 +261,7 @@ void test_performance_comparison() {
   std::cout << "Performance comparison completed!\n";
 }
 
-int main() {
+void test_utrim(){
   try {
     std::cout << "Starting trim function tests...\n\n";
 
@@ -275,13 +275,11 @@ int main() {
     // test_performance_comparison();
 
     std::cout << "\nAll trim tests passed successfully!\n";
-    return 0;
 
   } catch (const std::exception &e) {
     std::cerr << "Test failed with exception: " << e.what() << std::endl;
-    return 1;
   } catch (...) {
     std::cerr << "Test failed with unknown exception" << std::endl;
-    return 1;
   }
 }
+

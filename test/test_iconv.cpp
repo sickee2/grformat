@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace gr::str {
-template <typename char_type> class xiter {
+template <typename char_type> class uiter {
   const char_type *m_beg = nullptr;
   const char_type *m_end = nullptr;
   const char_type *m_current = nullptr;
@@ -18,7 +18,7 @@ template <typename char_type> class xiter {
   gr::endian m_endian;
 
 public:
-  explicit xiter(const char_type *data, size_t size, size_t pos = 0,
+  explicit uiter(const char_type *data, size_t size, size_t pos = 0,
                 uc::on_failed fb = uc::on_failed::skip,
                 gr::endian endian = gr::endian::native) noexcept
       : m_beg(data), m_end(data + size), m_current(data + std::min(pos, size)),
@@ -32,17 +32,17 @@ public:
     // std::cout << m_seq_len << "  " << uc::get_status_info(m_status) << std::endl;
     // seek_forward();
   }
-  explicit xiter(std::basic_string_view<char_type> sv, size_t pos = 0,
+  explicit uiter(std::basic_string_view<char_type> sv, size_t pos = 0,
                 uc::on_failed fb = uc::on_failed::skip,
                 gr::endian endian = gr::endian::native) noexcept
-      : xiter(sv.data(), sv.size(), pos, fb, endian) {}
+      : uiter(sv.data(), sv.size(), pos, fb, endian) {}
 
-  xiter(const xiter &) noexcept = default;
-  xiter(xiter &&) noexcept = default;
-  ~xiter() = default;
+  uiter(const uiter &) noexcept = default;
+  uiter(uiter &&) noexcept = default;
+  ~uiter() = default;
 
-  xiter &operator=(const xiter &) noexcept = default;
-  xiter &operator=(xiter &&) noexcept = default;
+  uiter &operator=(const uiter &) noexcept = default;
+  uiter &operator=(uiter &&) noexcept = default;
 
   uc::codepoint& operator*() const {
     if(m_codepoint == 0){
@@ -51,7 +51,7 @@ public:
     return m_codepoint;
   }
 
-  xiter &operator++() {
+  uiter &operator++() {
     seek_forward();
     return *this;
   }
@@ -108,7 +108,7 @@ to_utf8_original(u16v utf16,
   // };
   // gr::str::batch_process_utf<char16_t>(utf16, func, endian_ );
 
-  // auto it = xiter<char16_t>(utf16);
+  // auto it = uiter<char16_t>(utf16);
   // for(; it; ++it){
   //   result.append((*it).chunk_u8().view());
   // }
@@ -121,7 +121,7 @@ to_utf8_original(u16v utf16,
 }
 } // namespace gr::str
 
-int main() {
+void test_iconv(){
   using namespace gr;
   using namespace std;
   using namespace gr::literals;
@@ -167,5 +167,5 @@ int main() {
   auto duration3 = chrono::duration_cast<chrono::microseconds>(end3 - start3);
 
   cout << "\ngr::str::to_utf8_original: "<< duration1 << "\niconv: " << duration2  << "\ngr::str::to_utf8: " << duration3 << endl;
-  return 0;
 }
+
