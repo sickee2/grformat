@@ -1176,6 +1176,12 @@ template <> struct formatter<str::u8v> {
     format_string(out, value, spec);
   }
 };
+template <> struct formatter<std::string_view> {
+  void operator()(format_output &out, const std::string_view &value,
+                  const format_spec &spec) const {
+    format_string(out, value, spec);
+  }
+};
 
 template <> struct formatter<std::string> {
   void operator()(format_output &out, const std::string &value,
