@@ -532,9 +532,9 @@ inline void format_string(format_output &out, const str::u8 &value,
   format_string_impl(out, value.data(), value.size(), spec);
 }
 
-inline std::tuple<int, bool>
+inline std::tuple<unsigned, bool>
 pre_parse_integer_type(const format_spec &spec) {
-  int base = 10;
+  unsigned base = 10;
   bool uppercase = false;
 
   switch (spec.type) {

@@ -116,7 +116,8 @@ template <typename T> struct supports_integer {
 template <typename T>
 inline constexpr bool supports_integer_v = supports_integer<T>::value;
 
-inline size_t smart_mod_u(size_t n, size_t m) {
+template<typename SIZE_T>
+inline size_t smart_mod_u(SIZE_T n, size_t m) {
   // check n^2
   if ((m & (m - 1)) == 0) {
     return n & (m - 1);
@@ -130,7 +131,8 @@ inline size_t smart_mod_u(size_t n, size_t m) {
   }
 }
 
-inline size_t smart_div_u(size_t n, size_t d) {
+template<typename SIZE_T>
+inline size_t smart_div_u(SIZE_T n, size_t d) {
   switch (d) {
   case 10: return n / 10; // compiler auto optimized
   case 2: return n >> 1;
@@ -262,80 +264,120 @@ constexpr int char_to_digit(char c) {
 }
 
 template <bool IsOctal, typename UnsignedType>
-inline sstov_result stoi_pow2_base_u(const char *&first, const char *last,
+inline sstov_result stoi_pow2_base_u(const char *first, const char *last,
                                    UnsignedType &result, int base) {
-  const int shift = IsOctal ? 3 : (base == 2 ? 1 : 4);
-  const UnsignedType max_safe =
-      std::numeric_limits<UnsignedType>::max() >> shift;
-  result = 0;
-  UnsignedType pre_result = 0;
+  const unsigned shift = IsOctal ? 3 : (base == 2 ? 1 : 4);
+  constexpr UnsignedType max_value = UnsignedType(-1);
+  const UnsignedType max_safe = max_value >> shift;
 
-  while (first < last) {
+  result = 0;
+  std::errc ec{};
+  while (first < last && ec == std::errc{}) {
     int digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= base || result > max_safe) {
+    if (digit < 0 || digit >= base) {
       break;
     }
-
-    pre_result = result;
-    result = (result << shift) + static_cast<UnsignedType>(digit);
-
+    if(result > max_safe){
+      ec = std::errc::result_out_of_range;
+      break;
+    }
+    UnsignedType new_result = result << shift;
+    if(new_result > max_value - digit){
+      ec = std::errc::result_out_of_range;
+      break; 
+    }
+    result = new_result + UnsignedType(digit);
     ++first;
   }
-
-  if (result < pre_result) { // overflow
-    return {first, std::errc::result_out_of_range};
+  while(first < last){
+    unsigned digit = toy::detail::char_to_digit(*first);
+    if (digit < 0 || digit >= 10) {
+      break;
+    }
+    ++first;
   }
-
-  return {first, std::errc{}};
+  return {first, ec};
 }
 
 template <typename UnsignedType>
-inline sstov_result stoi_base10_u(const char *&first, const char *last,
+inline sstov_result stoi_base10_u(const char *first, const char *last,
                                 UnsignedType &result) {
-  UnsignedType pre_result = 0;
+
   result = 0;
-  while (first < last) {
-    int digit = toy::detail::char_to_digit(*first);
+  std::errc ec{};
+  constexpr UnsignedType max_value = UnsignedType(-1);
+  constexpr UnsignedType max_safe = UnsignedType(-1) / 10;
+
+  while(first < last && ec == std::errc{}){
+    unsigned digit = toy::detail::char_to_digit(*first);
     if (digit < 0 || digit >= 10) {
       break;
     }
 
-    pre_result = result;
-    result = result * 10 + digit;
-    ++first;
-  }
-
-  if (result < pre_result) { // overflow
-    return {first, std::errc::result_out_of_range};
-  }
-
-  return {first, std::errc{}};
-}
-template <typename UnsignedType>
-inline sstov_result stoi_alnum_u(const char *&first, const char *last,
-                               UnsignedType &result, int base) {
-
-  UnsignedType pre_result = 0;
-  result = 0;
-  // sstov_result status{};
-  while (first < last) {
-    int digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= base) {
-      // status.ec = std::errc::invalid_argument;
+    if(result > max_safe){
+      ec = std::errc::result_out_of_range;
       break;
     }
 
-    pre_result = result;
-    result = result * base + digit;
+    UnsignedType new_result = result * 10;
+
+    if (new_result > max_value - digit) {
+      ec = std::errc::result_out_of_range;
+      break;
+    }
+
+    result = new_result + UnsignedType(digit);
     ++first;
   }
 
-  if (result < pre_result) { // overflow
-    return {first, std::errc::result_out_of_range};
+  while(first < last){
+    unsigned digit = toy::detail::char_to_digit(*first);
+    if (digit < 0 || digit >= 10) {
+      break;
+    }
+    ++first;
+  }
+  return {first, ec};
+}
+
+template <typename UnsignedType>
+inline sstov_result stoi_alnum_u(const char *first, const char *last,
+                               UnsignedType &result, unsigned base) {
+  result = 0;
+  std::errc ec{};
+  constexpr UnsignedType max_value = UnsignedType(-1);
+  const UnsignedType max_safe = UnsignedType(-1) / base;
+
+  while(first < last && ec == std::errc{}){
+    unsigned digit = toy::detail::char_to_digit(*first);
+    if (digit < 0 || digit >= base) {
+      break;
+    }
+
+    if(result > max_safe){
+      ec = std::errc::result_out_of_range;
+      break;
+    }
+
+    UnsignedType new_result = result * base;
+
+    if (new_result > max_value - digit) {
+      ec = std::errc::result_out_of_range;
+      break;
+    }
+
+    result = new_result + UnsignedType(digit);
+    ++first;
   }
 
-  return {first, std::errc{}};
-  // return status;
+  while(first < last){
+    unsigned digit = toy::detail::char_to_digit(*first);
+    if (digit < 0 || digit >= base) {
+      break;
+    }
+    ++first;
+  }
+  return {first, ec};
 }
 } // namespace detail
 
@@ -363,7 +405,7 @@ public:
    * @return Conversion result (pointer, length)
    */
   template <typename T>
-  [[nodiscard]] buffer_pack from_integer(T value, int base = 10,
+  [[nodiscard]] buffer_pack from_integer(T value, unsigned base = 10,
                                          bool uppercase = false,
                                          bool alternate = false) {
     // static_assert(std::is_integral_v<T>, "T must be integral type");
@@ -521,7 +563,7 @@ private:
   }
 
   static inline std::tuple<int, const char *, uint8_t, bool>
-  _prepare_integer_format_type(int base, bool uppercase = false) {
+  _prepare_integer_format_type(unsigned base, bool uppercase = false) {
     const char *prefix = nullptr;
     uint8_t prefix_len = 0;
 
@@ -577,6 +619,7 @@ private:
   void _convert_integer_u(unsigned_type value, int base, bool uppercase) {
     const char *digits = uppercase ? digits_upper : digits_lower;
 
+    // std::cout << "_convert_integer_u" << std::endl;
     char *current = ptr_;
 
     if (base == 10) {
@@ -891,6 +934,33 @@ inline int get_sign_for_sstov(const char* &first){
   return sign;
 }
 
+template <typename integer_type, typename unsigned_type>
+inline std::errc check_integer_overflow(int str_sign,
+                                           unsigned_type pre_result,
+                                           integer_type &value_out) {
+  // std::cout << "\t[DEBUG] pre_result: " << pre_result << std::endl;
+  if constexpr (std::is_signed_v<integer_type>) { // signed type
+    if (str_sign == -1) {
+      value_out = -integer_type(pre_result);
+      if (pre_result > unsigned_type(std::numeric_limits<integer_type>::max()) + 1) {
+        return std::errc::result_out_of_range;
+      }
+    } else {
+      value_out = integer_type(pre_result);
+      if (pre_result > unsigned_type(std::numeric_limits<integer_type>::max())) {
+        return std::errc::result_out_of_range;
+      }
+    }
+  } else {
+    if(str_sign == -1){
+      value_out = integer_type(-1);
+      return std::errc::invalid_argument;
+    }
+    value_out = integer_type(pre_result); // unsigned_type
+  }
+  return std::errc{};
+}
+
 } // namespace detail
 
 
@@ -910,52 +980,31 @@ inline sstov_result sstoi(const char *first, const char *last, integer_type &val
     return {first, std::errc::invalid_argument};
   }
 
-  int sign = 1;
-  if constexpr (std::is_signed_v<integer_type>) {
-    if (*first == '-') {
-      sign = -1;
-      ++first;
-    } else if (*first == '+') {
-      sign = 1;
-      ++first;
-    }
-  }
+ int pre_sign = detail::get_sign_for_sstov(first);
 
   using unsigned_type = detail::make_unsigned_t<integer_type>;
-  unsigned_type result = 0;
+  unsigned_type pre_result = 0;
 
   sstov_result status;
 
   if(base == 10){
-    status = detail::stoi_base10_u(first, last, result);
+    status = detail::stoi_base10_u(first, last, pre_result);
   } else if ((base & (base - 1)) == 0) {
     if (base == 2) {
-      status = detail::stoi_pow2_base_u<false>(first, last, result, base);
+      status = detail::stoi_pow2_base_u<false>(first, last, pre_result, base);
     } else if (base <= 8) {
-      status = detail::stoi_pow2_base_u<true>(first, last, result, base);
+      status = detail::stoi_pow2_base_u<true>(first, last, pre_result, base);
     } else {
-      status = detail::stoi_pow2_base_u<false>(first, last, result, base);
+      status = detail::stoi_pow2_base_u<false>(first, last, pre_result, base);
     }
   } else {
-      status = detail::stoi_alnum_u(first, last, result, base);
+      status = detail::stoi_alnum_u(first, last, pre_result, base);
   }
-
-  if constexpr (std::is_signed_v<integer_type>) { // signed type
-    if (sign == -1) {
-      if (result > unsigned_type(std::numeric_limits<integer_type>::max()) + 1) {
-        return {status.ptr, std::errc::result_out_of_range};
-      }
-      value = -integer_type(result);
-    } else {
-      if (result > unsigned_type(std::numeric_limits<integer_type>::max())) {
-        return {status.ptr, std::errc::result_out_of_range};
-      }
-      value = integer_type(result);
-    }
-  } else {
-    value = integer_type(result); // unsigned_type
+  if(status.ec == std::errc{}){
+    return {status.ptr, detail::check_integer_overflow(pre_sign, pre_result, value)};
+  }else{
+    value = integer_type(pre_result);
   }
-
   return status;
 }
 
@@ -963,6 +1012,30 @@ template <typename integer_type>
 inline sstov_result sstoi(const char *first, size_t len, integer_type &value,
                           int base = 10) noexcept {
   return sstoi(first, first + len, value, base);
+}
+
+template <typename integer_type>
+inline sstov_result sstoi_base10(const char *first, const char *last, integer_type &value){
+  if (last <= first) {
+    value = 0;
+    return {first, std::errc::invalid_argument};
+  }
+  int pre_sign = detail::get_sign_for_sstov(first);
+  // std::cout << "pre sign: " << pre_sign << std::endl;
+  using unsigned_type = detail::make_unsigned_t<integer_type>;
+  unsigned_type pre_result = 0;
+  sstov_result status = detail::stoi_base10_u(first, last, pre_result);
+  if(status.ec == std::errc{}){
+    return {status.ptr, detail::check_integer_overflow(pre_sign, pre_result, value)};
+  }else{
+    value = integer_type(pre_result);
+  }
+  return status;
+}
+
+template <typename integer_type>
+inline sstov_result sstoi_base10(const char *first, size_t len, integer_type &value){
+  return sstoi_base10(first, first + len, value);
 }
 
 template <typename float_type>
@@ -1021,14 +1094,14 @@ inline toy::sstov_result sstof(const char *first, const char *end,
   if (frac_p) {
     uint64_t frac_part = 0;
     res = toy::detail::stoi_base10_u(frac_p, end, frac_part);
-    unsigned frac_digits_cout = res.ptr - frac_p;
+    unsigned frac_digits_count = res.ptr - frac_p;
 
     if (res.ptr - frac_p > 17) {
-      frac_digits_cout = 17;
+      frac_digits_count = 17;
     }
 
     value += float_type(frac_part) /
-             toy::detail::to_chars_helper::get_pow10(frac_digits_cout);
+             toy::detail::to_chars_helper::get_pow10(frac_digits_count);
 
   }
 
@@ -1037,7 +1110,7 @@ inline toy::sstov_result sstof(const char *first, const char *end,
   while (exp_p < end) {
     if (*exp_p == 'e' || *exp_p == 'E') {
       ++exp_p;
-      int exponent = 0;
+      unsigned exponent = 0;
       unsigned remaining = end - exp_p;
       if(remaining > 17) remaining = 17;
       int sign_e = toy::detail::get_sign_for_sstov(exp_p);
@@ -1086,7 +1159,7 @@ ftoss(char *out_buffer, size_t buffer_size, T value,
 
 template <typename T>
 inline detail::to_chars_helper::buffer_pack
-itoss(char *out_buffer, size_t buffer_size, T value, int base = 10,
+itoss(char *out_buffer, size_t buffer_size, T value, unsigned base = 10,
       bool uppercase = false, bool alternate = false) {
   static_assert(detail::supports_integer_v<T>,
                 "gr::toy::itoss => T must be integral type");
