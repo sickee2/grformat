@@ -505,11 +505,11 @@ void test_toy_format_preformance(){
   test_special_types_performance();
   test_unicode_performance();
   test_throughput_comparison();
-  test_result_consistency();
   test_edge_cases_performance();
   test_mixed_types_performance();
   test_format_specifier_performance();
   test_real_world_scenarios();
+  test_result_consistency();
   gr::console::write("\nTest completed\n");
 }
 

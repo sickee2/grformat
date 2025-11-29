@@ -6,14 +6,38 @@ GR Format Library is a modern C++ formatting and logging library focused on extr
 
 ## Performance Advantages
 
-Based on 100,000 iteration performance tests:
+Based on comprehensive performance tests with 100,000 iterations:
 
 | Operation Type | std::format | toy::format | Performance Improvement |
 |---------------|-------------|-------------|-------------------------|
-| Integer Formatting | 5859μs | 2598μs | **55% Faster** |
-| Floating-point Formatting | 7904μs | 5928μs | **25% Faster** |
-| String Formatting | 3859μs | 2455μs | **36% Faster** |
-| Overall Throughput | 7.67M ops/sec | 12.33M ops/sec | **60% Higher** |
+| Integer Formatting | 6709μs | 2517μs | **62% Faster** |
+| Floating-point Formatting | 7910μs | 5929μs | **25% Faster** |
+| String Formatting | 3730μs | 2250μs | **40% Faster** |
+| Pointer Formatting | 1242μs | 555μs | **55% Faster** |
+| Multi-argument Formatting | 7236μs | 5106μs | **29% Faster** |
+| Complex Format Specifiers | 8108μs | 5489μs | **32% Faster** |
+| Memory Allocation | 1452μs | 978μs | **33% Faster** |
+| Overall Throughput | 7.88M ops/sec | 12.87M ops/sec | **63% Higher** |
+
+### Key Performance Highlights:
+
+**Speed Improvements:**
+- **Basic Types**: 25-62% faster across integer, float, and string operations
+- **Complex Operations**: 29-40% faster for multi-argument and complex formatting
+- **Memory Efficiency**: 33% faster memory allocation with comparable memory usage
+- **Real-world Scenarios**: 24-26% faster in practical use cases
+
+**Throughput Advantage:**
+- **Operations per Second**: 12.87M vs 7.88M (63% higher throughput)
+- **Consistent Performance**: Superior performance maintained across all test scenarios
+- **Edge Cases**: Better handling of empty strings (23% faster) and long strings (57% faster)
+
+**Specialized Performance:**
+- **UTF-8 Strings**: 38% faster processing
+- **Time/Duration**: Built-in optimized chrono formatting
+- **Mixed Types**: 25-33% faster for complex mixed-type formatting
+
+The performance tests demonstrate that `gr::toy::format` consistently outperforms `std::format` across all categories, making it ideal for performance-critical applications.
 
 ## Core Components
 

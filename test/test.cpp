@@ -36,7 +36,7 @@ int main(){
   // test_cptr();
   // test_endian();
   // test_toy_format();
-  // test_toy_format_preformance();
+  test_toy_format_preformance();
   // test_from_chars();
   // test_iconv();
   // test_logger();
@@ -46,7 +46,7 @@ int main(){
   // test_utrim();
   // test_upper_lower();
   // test_utf_string();
-  test_utf_iter_performance();
+  // test_utf_iter_performance();
 
   // console::writeln("=== Testing explicit indexing with nested format ===");
   // for (int i = 0; i < 5; i++) {
