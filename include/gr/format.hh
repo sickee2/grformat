@@ -565,9 +565,9 @@ constexpr unsigned make_general_integer_buffer_size(){
   switch (sizeof(T)) {
   case 1:
   case 2:
-    return 8;
-  case 4:
     return 16;
+  case 4:
+    return 24;
   case 8:
     return 32;
   case 16:

@@ -215,6 +215,35 @@ struct is_signed<__int128_t>{
   constexpr static bool value = true;
 };
 
+template<typename T>
+struct numeric_limits{
+  constexpr static T max(){
+    return std::numeric_limits<T>::max();
+  }
+  constexpr static T min(){
+    return std::numeric_limits<T>::min();
+  }
+};
+
+template<>
+struct numeric_limits<__uint128_t>{
+  constexpr static __uint128_t max(){
+    return __uint128_t(-1);
+  }
+  constexpr static __uint128_t min(){
+    return 0;
+  }
+};
+
+template<>
+struct numeric_limits<__int128_t>{
+  constexpr static __int128_t max(){
+    return ((__int128_t(0x7FFFFFFFFFFFFFFF) << 64) | 0xFFFFFFFFFFFFFFFF);  }
+  constexpr static __int128_t min(){
+    return ((__int128_t(0x8000000000000000) << 64));
+  }
+};
+
 #define CHAR_TO_DIGIT_METHOD 2
 constexpr int char_to_digit(char c) {
 #if CHAR_TO_DIGIT_METHOD == 0
@@ -955,18 +984,18 @@ inline std::errc check_integer_overflow(int str_sign,
   if constexpr (detail::is_signed<integer_type>::value) { // signed type
     if (str_sign == -1) {
       value_out = -integer_type(pre_result);
-      if (pre_result > unsigned_type(std::numeric_limits<integer_type>::max()) + 1) {
+      if (pre_result > unsigned_type(detail::numeric_limits<integer_type>::max()) + 1) {
         return std::errc::result_out_of_range;
       }
     } else {
       value_out = integer_type(pre_result);
-      if (pre_result > unsigned_type(std::numeric_limits<integer_type>::max())) {
+      if (pre_result > unsigned_type(detail::numeric_limits<integer_type>::max())) {
         return std::errc::result_out_of_range;
       }
     }
   } else {
     if(str_sign == -1){
-      value_out = integer_type(-1);
+      value_out = integer_type(pre_result);
       return std::errc::invalid_argument;
     }
     value_out = integer_type(pre_result); // unsigned_type

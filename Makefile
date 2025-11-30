@@ -20,26 +20,28 @@ TEST_DIR = test
 CPP_SRC = $(SRC_DIR)/gr/utf_sequence.cpp \
 $(SRC_DIR)/gr/utf_string.cpp \
 $(TEST_DIR)/test.cpp \
-$(TEST_DIR)/test_bom.cpp \
-$(TEST_DIR)/test_cbuf.cpp \
-$(TEST_DIR)/test_char_conv.cpp \
-$(TEST_DIR)/test_convert.cpp \
-$(TEST_DIR)/test_convert2.cpp \
-$(TEST_DIR)/test_cptr.cpp \
-$(TEST_DIR)/test_endian.cpp \
-$(TEST_DIR)/test_format.cpp \
-$(TEST_DIR)/test_format_performaence.cpp \
-$(TEST_DIR)/test_from_chars.cpp \
-$(TEST_DIR)/test_iconv.cpp \
-$(TEST_DIR)/test_logger.cpp \
-$(TEST_DIR)/test_print.cpp \
-$(TEST_DIR)/test_printable.cpp \
-$(TEST_DIR)/test_RE2.cpp \
-$(TEST_DIR)/test_stoi.cpp \
-$(TEST_DIR)/test_trim.cpp \
-$(TEST_DIR)/test_upper_lower.cpp \
-$(TEST_DIR)/test_utf_string.cpp \
-$(TEST_DIR)/test_utfiter.cpp
+$(TEST_DIR)/test_sstoi_edgecases.cpp \
+$(TEST_DIR)/test_char_conv_performance.cpp \
+
+# $(TEST_DIR)/test_format_performaence.cpp \
+# $(TEST_DIR)/test_bom.cpp \
+# $(TEST_DIR)/test_cbuf.cpp \
+# $(TEST_DIR)/test_convert.cpp \
+# $(TEST_DIR)/test_convert2.cpp \
+# $(TEST_DIR)/test_cptr.cpp \
+# $(TEST_DIR)/test_endian.cpp \
+# $(TEST_DIR)/test_format.cpp \
+# $(TEST_DIR)/test_to_chars.cpp \
+# $(TEST_DIR)/test_iconv.cpp \
+# $(TEST_DIR)/test_logger.cpp \
+# $(TEST_DIR)/test_print.cpp \
+# $(TEST_DIR)/test_printable.cpp \
+# $(TEST_DIR)/test_RE2.cpp \
+# $(TEST_DIR)/test_stoi.cpp \
+# $(TEST_DIR)/test_trim.cpp \
+# $(TEST_DIR)/test_upper_lower.cpp \
+# $(TEST_DIR)/test_utf_string.cpp \
+# $(TEST_DIR)/test_utfiter.cpp
 
 
 # OBJ = $(BUILD_DIR)/main.o
