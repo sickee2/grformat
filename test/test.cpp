@@ -40,7 +40,7 @@ int main(){
   // test_cptr();
   // test_endian();
   // test_toy_format();
-  // test_toy_format_preformance();
+  test_toy_format_preformance();
   // test_to_chars();
   // test_iconv();
   // test_logger();
