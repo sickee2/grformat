@@ -202,6 +202,19 @@ template <> struct promote_integer_u<uint64_t> {
   using type = __uint128_t;
 };
 
+template <typename T>
+struct is_signed{
+ constexpr static bool value = std::is_signed_v<T>;
+};
+template <>
+struct is_signed<__uint128_t>{
+  constexpr static bool value = false;
+};
+template <>
+struct is_signed<__int128_t>{
+  constexpr static bool value = true;
+};
+
 #define CHAR_TO_DIGIT_METHOD 2
 constexpr int char_to_digit(char c) {
 #if CHAR_TO_DIGIT_METHOD == 0
@@ -445,7 +458,7 @@ public:
     }
     // Handle sign
     bool negative = false;
-    if constexpr (std::is_signed_v<T>) {
+    if constexpr (detail::is_signed<T>::value) {
       if (value < 0) {
         negative = true;
         value = -value;
@@ -939,7 +952,7 @@ inline std::errc check_integer_overflow(int str_sign,
                                            unsigned_type pre_result,
                                            integer_type &value_out) {
   // std::cout << "\t[DEBUG] pre_result: " << pre_result << std::endl;
-  if constexpr (std::is_signed_v<integer_type>) { // signed type
+  if constexpr (detail::is_signed<integer_type>::value) { // signed type
     if (str_sign == -1) {
       value_out = -integer_type(pre_result);
       if (pre_result > unsigned_type(std::numeric_limits<integer_type>::max()) + 1) {
