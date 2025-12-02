@@ -326,7 +326,7 @@ constexpr int char_to_digit(char c) {
 
 template <bool IsOctal, typename UnsignedType>
 inline sstov_result stoi_pow2_base_u(const char *first, const char *last,
-                                   UnsignedType &result, int base) {
+                                   UnsignedType &result, unsigned base) {
   const unsigned shift = IsOctal ? 3 : (base == 2 ? 1 : 4);
   constexpr UnsignedType max_value = UnsignedType(-1);
   const UnsignedType max_safe = max_value >> shift;
@@ -334,8 +334,8 @@ inline sstov_result stoi_pow2_base_u(const char *first, const char *last,
   result = 0;
   std::errc ec{};
   while (first < last && ec == std::errc{}) {
-    int digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= base) {
+    unsigned digit = toy::detail::char_to_digit(*first);
+    if (digit >= base) {
       break;
     }
     if(result > max_safe){
@@ -352,7 +352,7 @@ inline sstov_result stoi_pow2_base_u(const char *first, const char *last,
   }
   while(first < last){
     unsigned digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= 10) {
+    if (digit >= 10) {
       break;
     }
     ++first;
@@ -371,7 +371,7 @@ inline sstov_result stoi_base10_u(const char *first, const char *last,
 
   while(first < last && ec == std::errc{}){
     unsigned digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= 10) {
+    if (digit >= 10) {
       break;
     }
 
@@ -393,7 +393,7 @@ inline sstov_result stoi_base10_u(const char *first, const char *last,
 
   while(first < last){
     unsigned digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= 10) {
+    if (digit >= 10) {
       break;
     }
     ++first;
@@ -411,7 +411,7 @@ inline sstov_result stoi_alnum_u(const char *first, const char *last,
 
   while(first < last && ec == std::errc{}){
     unsigned digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= base) {
+    if (digit >= base) {
       break;
     }
 
@@ -433,7 +433,7 @@ inline sstov_result stoi_alnum_u(const char *first, const char *last,
 
   while(first < last){
     unsigned digit = toy::detail::char_to_digit(*first);
-    if (digit < 0 || digit >= base) {
+    if (digit >= base) {
       break;
     }
     ++first;
