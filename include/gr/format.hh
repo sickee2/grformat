@@ -76,7 +76,7 @@
  *
  * Known Limitations:
  * - Floating-point conversion (ftoss/sstof) is currently slower than std::to_chars/std::from_chars
- *   - toy::sstof: 646μs vs std::from_chars: 486μs (will be optimized in future versions)
+ * - toy::sstof: 646μs vs std::from_chars: 486μs (will be optimized in future versions)
  * - Limited compile-time format string checking in C++17 mode
  *
  * Compilation Requirements:
@@ -85,7 +85,8 @@
  *
  * @note This library is optimized for performance-critical applications
  *       where string formatting overhead is significant.
- * @warning Floating-point conversion performance will be improved in future versions
+ * @warning Floating-point conversion performance will be improved in future
+ * versions
  *
  * Format custom type
  * class TestT{
@@ -173,7 +174,7 @@ struct format_spec {
   int width = -1;     // Field width (-1 means unspecified)
   int precision = -1; // Precision for floating point/strings
   char fill = ' ';    // Fill character for alignment
-  char align = '<';   // Alignment: < left, > right, ^ center
+  char align = '\0';   // Alignment: < left, > right, ^ center
   char sign = '-';    // Sign: - minus only, + plus/minus, space for positive
   bool alternate = false; // # Alternate form (0x, 0b prefixes)
   char type = '\0';       // Type specifier (d, x, f, e, etc.)
@@ -503,10 +504,10 @@ inline void apply_alignment(Output &output, const char *content,
     output.put(content, content_len);
     output.put(padding, fill_char);
   } break;
-  case '>': // Right alignment
-    output.put(padding, fill_char);
-    output.put(content, content_len);
-    break;
+  // case '>': // Right alignment
+  //   output.put(padding, fill_char);
+  //   output.put(content, content_len);
+  //   break;
   case '^': { // Center alignment
     const size_t left_pad = padding / 2;
     const size_t right_pad = padding - left_pad;
@@ -515,9 +516,10 @@ inline void apply_alignment(Output &output, const char *content,
     output.put(right_pad, fill_char);
     break;
   }
+  case '>': // Right alignment
   default:
-    output.put(content, content_len);
     output.put(padding, fill_char);
+    output.put(content, content_len);
   }
 }
 
@@ -1432,42 +1434,119 @@ private:
     size_t auto_placeholder_count = 0;
     bool has_explicit_index = false;
     bool has_auto_index = false;
+    size_t current_auto_index = 0; // Track auto index for format spec checking
 
-    for (size_t i = 0; i < N - 1; i++) {
-      if (brace_balance == 0 && i + 1 < N - 1) {
-        if (s[i] == '{' && s[i + 1] == '{') {
-          i++; // Skip second {
+    const char *ptr = s;
+    const char *end = s + N - 1;
+
+    while (ptr < end) {
+      if (brace_balance == 0 && ptr + 1 < end) {
+        if (*ptr == '{' && *(ptr + 1) == '{') {
+          ptr += 2; // Skip both {{
           continue;
         }
-        if (s[i] == '}' && s[i + 1] == '}') {
-          i++; // Skip second }
+        if (*ptr == '}' && *(ptr + 1) == '}') {
+          ptr += 2; // Skip both }}
           continue;
         }
       }
 
       // Process single braces
-      if (s[i] == '{') {
+      if (*ptr == '{') {
         brace_balance++;
         // Check if this is a valid placeholder (not escaped)
-        if (i + 1 < N - 1 && s[i + 1] != '{') {
-          // Check if arguments count > 0
-          size_t index_used =
-              constexpr_check_brace_index(s, N, i + 1, arg_count);
+        if (ptr + 1 < end && *(ptr + 1) != '{') {
+          const char *placeholder_start = ptr + 1;
+          const char *placeholder_end = placeholder_start;
+          size_t index_used = static_cast<size_t>(-1);
+          bool has_colon = false;
+
+          // Find the matching '}'
+          int nested_braces = 0;
+          while (placeholder_end < end) {
+            if (*placeholder_end == '{') {
+              nested_braces++;
+            } else if (*placeholder_end == '}') {
+              if (nested_braces == 0) {
+                break;
+              }
+              nested_braces--;
+            } else if (*placeholder_end == ':' && nested_braces == 0) {
+              has_colon = true;
+              break;
+            }
+            placeholder_end++;
+          }
+
+          // Now find the actual closing brace
+          const char *closing_brace = placeholder_end;
+          if (has_colon) {
+            // Skip to find the closing brace after colon
+            while (closing_brace < end && *closing_brace != '}') {
+              if (*closing_brace == '{') nested_braces++;
+              else if (*closing_brace == '}') {
+                if (nested_braces == 0) break;
+                nested_braces--;
+              }
+              closing_brace++;
+            }
+          }
+
+          if (closing_brace < end && *closing_brace == '}') {
+            if (has_colon) {
+              // Parse index before colon
+              index_used = constexpr_check_brace_index(placeholder_start, placeholder_end, arg_count);
+
+              // Check format specifier after colon
+              const char *spec_start = placeholder_end + 1; // Skip ':'
+              const char *spec_end = closing_brace;
+
+              if (spec_start < spec_end) {
+                char spec_type = constexpr_get_spec_type(spec_start, spec_end);
+
+                if (index_used == static_cast<size_t>(-1)) {
+                  // Auto-indexing, use current auto index
+                  // Check if current_auto_index is within bounds
+                  if (current_auto_index >= arg_count) {
+                    throw "gr::toy::format => Argument index out of range";
+                  }
+                  constexpr_check_format_spec_for_arg<Args...>(spec_type, current_auto_index);
+                  current_auto_index++;
+                } else {
+                  // Explicit indexing
+                  constexpr_check_format_spec<Args...>(spec_type, placeholder_start, placeholder_end, arg_count);
+                }
+              }
+            } else {
+              // No colon, just index
+              index_used = constexpr_check_brace_index(placeholder_start, closing_brace, arg_count);
+            }
+          }
+
           if (index_used == static_cast<size_t>(-1)) {
             // Auto indexes in braces and track max index
             auto_placeholder_count++;
             has_auto_index = true;
+            // Only increment if this placeholder doesn't have a format specifier
+            // (those with format specifiers already incremented current_auto_index)
+            if (!has_colon) {
+              current_auto_index++;
+            }
           } else {
-            // Explicity indexed placeholder
+            // Explicitly indexed placeholder
             max_index_used = std::max(max_index_used, index_used);
             has_explicit_index = true;
           }
         }
-      } else if (s[i] == '}') {
+        ptr++;
+      } else if (*ptr == '}') {
         brace_balance--;
         if (brace_balance < 0) {
           throw "gr::toy::format => Unmatched closing brace";
         }
+        ptr++;
+      } else {
+        ptr++;
       }
     }
 
@@ -1492,33 +1571,28 @@ private:
     }
   }
 
-  static consteval size_t constexpr_check_brace_index(const char *s, size_t N,
-                                                      size_t start_pos,
+  static consteval size_t constexpr_check_brace_index(const char *start,
+                                                      const char *end,
                                                       size_t arg_count) {
-    size_t i = start_pos;
-    bool has_colon = false;
+    const char *ptr = start;
     bool has_index_content = false;
     size_t index_value = 0;
 
     // Check empty {} - auto indexing
-    if (i < N - 1 && s[i] == '}') {
+    if (ptr < end && *ptr == '}') {
       return static_cast<size_t>(-1);
     }
 
-    while (i < N - 1 && s[i] != '}') {
-      if (s[i] == ':') {
-        has_colon = true;
-        break;
-      }
+    while (ptr < end && *ptr != '}' && *ptr != ':') {
       // Check indexing validation
-      char c = s[i];
+      char c = *ptr;
       if (c < '0' || c > '9') {
         throw "gr::toy::format => Invalid argument index - must be numeric";
       }
 
       has_index_content = true;
       index_value = index_value * 10 + (c - '0');
-      i++;
+      ptr++;
     }
 
     if (has_index_content) {
@@ -1532,16 +1606,170 @@ private:
       return index_value;
     }
 
-    if (has_colon) {
-      // constexpr_check_format_spec(s, N, i + 1);
-    }
     return static_cast<size_t>(-1);
   }
 
-  // static consteval void constexpr_check_format_spec(const char* s, size_t N,
-  // size_t pos){
-  //
-  // }
+  static consteval char constexpr_get_spec_type(const char *start, const char *end) {
+    if (start >= end) return '\0';
+    
+    const char *ptr = end - 1;
+    // Find the last non-whitespace, non-digit character
+    while (ptr >= start) {
+      char c = *ptr;
+      // Skip digits, width/precision specifiers
+      if ((c >= '0' && c <= '9') || c == '.' || c == '<' || c == '>' || c == '^' || 
+          c == '+' || c == '-' || c == ' ' || c == '#' || c == '{' || c == '}') {
+        ptr--;
+        continue;
+      }
+      // Found type specifier
+      return c;
+    }
+    return '\0';
+  }
+
+  template<typename... Ts>
+  static consteval void constexpr_check_format_spec(char spec_type, 
+                                                   const char *index_start,
+                                                   const char *index_end,
+                                                   size_t arg_count) {
+    // Parse the index to determine which argument this specifier applies to
+    size_t arg_index = constexpr_check_brace_index(index_start, index_end, arg_count);
+    
+    if (arg_index == static_cast<size_t>(-1)) {
+      // Auto-indexing, we need to check all arguments
+      constexpr_check_format_spec_for_all<Ts...>(spec_type);
+    } else {
+      // Explicit indexing, check specific argument
+      constexpr_check_format_spec_for_arg<Ts...>(spec_type, arg_index);
+    }
+  }
+
+  template<typename T, typename... Rest>
+  static consteval void constexpr_check_format_spec_for_arg(char spec_type, size_t arg_index) {
+    if (arg_index == 0) {
+      // Check if this type supports the specifier
+      constexpr_check_type_specifier<T>(spec_type);
+    } else if constexpr (sizeof...(Rest) > 0) {
+      constexpr_check_format_spec_for_arg<Rest...>(spec_type, arg_index - 1);
+    }
+  }
+
+  template<typename... Ts>
+  static consteval void constexpr_check_format_spec_for_all(char spec_type) {
+    // Check all argument types
+    (constexpr_check_type_specifier<Ts>(spec_type), ...);
+  }
+
+  // Type trait to check if a type is supported for integer formatting
+  template<typename T>
+  static constexpr bool is_supported_integer_v = 
+    std::is_integral_v<std::remove_reference_t<T>> && 
+    !std::is_same_v<std::remove_cvref_t<T>, bool> && 
+    !std::is_same_v<std::remove_cvref_t<T>, char>;
+
+  // Type trait to check if a type is supported for floating point formatting
+  template<typename T>
+  static constexpr bool is_supported_float_v = std::is_floating_point_v<std::remove_reference_t<T>>;
+
+  // Type trait to check if a type is supported for string formatting
+  template<typename T>
+  static constexpr bool is_supported_string_v = 
+    std::is_same_v<std::remove_cvref_t<T>, const char*> || 
+    std::is_same_v<std::remove_cvref_t<T>, char*> ||
+    std::is_same_v<std::remove_cvref_t<T>, std::string> ||
+    std::is_same_v<std::remove_cvref_t<T>, std::string_view> ||
+    std::is_same_v<std::remove_cvref_t<T>, gr::str::u8> ||
+    std::is_same_v<std::remove_cvref_t<T>, gr::str::u8v>;
+
+  // Type trait to check if a type is a pointer
+  template<typename T>
+  static constexpr bool is_pointer_v = std::is_pointer_v<std::remove_reference_t<T>>;
+
+  // Type trait to check if a type is bool
+  template<typename T>
+  static constexpr bool is_bool_v = std::is_same_v<std::remove_cvref_t<T>, bool>;
+
+  // Type trait to check if a type is char
+  template<typename T>
+  static constexpr bool is_char_v = std::is_same_v<T, char>;
+
+
+  template<typename T>
+  static consteval void constexpr_check_type_specifier(char spec_type) {
+    if (spec_type == '\0') {
+      // Default specifier, always valid
+      return;
+    }
+
+    // using BaseType = std::remove_cvref_t<T>;
+
+    if constexpr (is_supported_integer_v<T>) {
+      // Integer types support: d, x, X, o, b, B
+      switch (spec_type) {
+        case 'd': case 'D':
+        case 'x': case 'X':
+        case 'o':
+        case 'b': case 'B':
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for integer argument";
+      }
+    } else if constexpr (is_supported_float_v<T>) {
+      // Floating point types support: f, F, e, E, g, G
+      switch (spec_type) {
+        case 'f': case 'F':
+        case 'e': case 'E':
+        case 'g': case 'G':
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for floating point argument";
+      }
+    } else if constexpr (is_supported_string_v<T>) {
+      // String types support: s (default)
+      switch (spec_type) {
+        case 's':
+        case '\0': // Default
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for string argument";
+      }
+    } else if constexpr (is_pointer_v<T>) {
+      // Pointer types support: p
+      switch (spec_type) {
+        case 'p':
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for pointer argument";
+      }
+    } else if constexpr (is_bool_v<T>) {
+      // Bool types support: d, s, a
+      switch (spec_type) {
+        case 'd':
+        case 's':
+        case 'a':
+        case '\0': // Default
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for bool argument";
+      }
+    } else if constexpr (is_char_v<T>) {
+      // Char types support: d, s
+      switch (spec_type) {
+        case 'd':
+        case 's':
+        case '\0': // Default
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for char argument";
+      }
+    } else {
+      // Custom types - we can't check at compile time
+      // They must provide their own formatter specialization
+      return;
+    }
+  }
+
 };
 
 #else
@@ -1578,9 +1806,6 @@ void format_to(format_output &out, fmt_string<Args...> fmt, Args &&...args) {
   while (ptr < end) {
     // 快速查找下一个 '{' 或 '}'
     const char *next_special = ptr;
-
-    // const char *open_brace = static_cast<const char *>(std::memchr(ptr, '{', end - next_special));
-    // const char *close_brace = static_cast<const char *>(std::memchr(ptr, '}', end - next_special));
 
     while (next_special < end && *next_special != '{' && *next_special != '}') {
       ++next_special;

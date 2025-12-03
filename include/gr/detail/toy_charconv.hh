@@ -53,7 +53,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
-#include <bits/error_constants.h>
+#include <system_error>
 #include <cmath>
 #include <cstdint>
 // #include <iostream>
@@ -194,7 +194,7 @@ template <> struct fp_traits<double> {
   static constexpr int max_shift_bits = 127;
 };
 
-#ifdef __SIZEOF_FLOAT128__
+// #ifdef __SIZEOF_FLOAT128__
 // If 128-bit floating-point support is available
 template <> struct fp_traits<long double> {
   using uint_type = __uint128_t;
@@ -211,7 +211,7 @@ template <> struct fp_traits<long double> {
   static constexpr int max_decimal_digits = 34;
   static constexpr int max_shift_bits = 255;
 };
-#endif
+// #endif
 
 template <typename T>
 using promote_float_t = typename fp_traits<T>::promote_type;
