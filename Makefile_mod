@@ -22,6 +22,17 @@ STD_PCM := $(PCM_CACHE)/std.pcm
 GR_TOOLS_MODULE := modules/gr.tools.cppm
 GR_TOOLS_PCM := $(PCM_CACHE)/gr.tools.pcm
 
+# Detect operating system
+UNAME_S := $(shell uname -s)
+MSYSTEM := $(shell echo $$MSYSTEM 2>/dev/null)
+LDFLAGS :=
+# Set linker flags based on operating system
+ifeq ($(UNAME_S), Linux)
+	LDFLAGS = $(shell pkg-config --libs re2) -liconv -lfmt
+else
+	LDFLAGS = $(shell pkg-config --libs re2) -liconv -lfmt
+	STD_MODULE := c:/msys64/ucrt64/share/libc++/v1/std.cppm
+endif
 # 源文件和目标文件
 GR_SOURCES := $(SRC_DIR)/gr/utf_sequence.cpp $(SRC_DIR)/gr/utf_string.cpp
 GR_OBJECTS := $(OBJ_DIR)/uc.seq.o $(OBJ_DIR)/uc.str.o $(OBJ_DIR)/external_data.o
@@ -84,7 +95,7 @@ $(MAIN_TARGET): $(MAIN_SOURCE) $(LIBRARY) $(STD_PCM) $(GR_TOOLS_PCM)
 	@$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(MODULE_FLAGS) $< \
 		-o $@ \
 		$(PKG_CONFIG_LIBS) $(EXTERNAL_LIBS) \
-		-L$(LIB_DIR) -lgrove -s
+		-L$(LIB_DIR) -lgrove -s $(LDFLAGS)
 
 # 清理
 clean:

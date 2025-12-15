@@ -3,10 +3,13 @@
 .xmake/
 .vscode/
 .git/
+.deps/
 build/
 clangd/
+libs/
+objs/
 
-src/main.cpp
+
 .DS_Store
 .root
 ./grstr
