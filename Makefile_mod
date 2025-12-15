@@ -25,12 +25,8 @@ GR_TOOLS_PCM := $(PCM_CACHE)/gr.tools.pcm
 # Detect operating system
 UNAME_S := $(shell uname -s)
 MSYSTEM := $(shell echo $$MSYSTEM 2>/dev/null)
-LDFLAGS :=
 # Set linker flags based on operating system
-ifeq ($(UNAME_S), Linux)
-	LDFLAGS = $(shell pkg-config --libs re2) -liconv -lfmt
-else
-	LDFLAGS = $(shell pkg-config --libs re2) -liconv -lfmt
+ifneq ($(UNAME_S), Linux)
 	STD_MODULE := c:/msys64/ucrt64/share/libc++/v1/std.cppm
 endif
 # 源文件和目标文件
@@ -43,8 +39,8 @@ MAIN_SOURCE := main.cpp
 MAIN_TARGET := tools_test
 
 # pkg-config 配置
-PKG_CONFIG_LIBS := $(shell pkg-config --libs re2)
-EXTERNAL_LIBS := -lfmt
+PKG_CONFIG_LIBS := $(shell pkg-config --libs re2) -liconv
+EXTERNAL_LIBS = -lfmt $(LDFLAGS)
 
 # 默认目标
 all: $(MAIN_TARGET)
@@ -94,8 +90,8 @@ $(MAIN_TARGET): $(MAIN_SOURCE) $(LIBRARY) $(STD_PCM) $(GR_TOOLS_PCM)
 	@echo "link..."
 	@$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(MODULE_FLAGS) $< \
 		-o $@ \
-		$(PKG_CONFIG_LIBS) $(EXTERNAL_LIBS) \
-		-L$(LIB_DIR) -lgrove -s $(LDFLAGS)
+		-L$(LIB_DIR) -lgrove -s \
+		$(PKG_CONFIG_LIBS) $(EXTERNAL_LIBS)
 
 # 清理
 clean:
