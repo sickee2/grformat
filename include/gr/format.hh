@@ -143,26 +143,28 @@ public:
  * @brief Output wrapper for formatting operations
  * Provides a unified interface for appending formatted content
  */
+
+using format_output_context = str::u8;
 class format_output {
-  str::u8 &ctxt;
+  format_output_context &out_ctxt;
 
 public:
-  constexpr format_output(str::u8 &_ref) : ctxt(_ref) {}
+  constexpr format_output(format_output_context &_ref) : out_ctxt(_ref) {}
   inline void put(const char *str) {
-    ctxt.append(str);
+    out_ctxt.append(str);
   } // unsafe method, only for constexpr str
-  inline void put(const char *str, size_t n) { ctxt.append(str, n); }
-  inline void put(char c) { ctxt.append(&c, 1); };
-  inline void put(const str::u8 &str, size_t n) { ctxt.append(str, n); }
-  inline void put(const str::u8 &str) { ctxt.append(str.data(), str.size()); }
+  inline void put(const char *str, size_t n) { out_ctxt.append(str, n); }
+  inline void put(char c) { out_ctxt.append(&c, 1); };
+  inline void put(const format_output_context &str, size_t n) { out_ctxt.append(str, n); }
+  inline void put(const format_output_context &str) { out_ctxt.append(str.data(), str.size()); }
   inline void put(const std::string &str) {
-    ctxt.append(str.data(), str.size());
+    out_ctxt.append(str.data(), str.size());
   }
   inline void put(const std::string &str, size_t n) {
-    ctxt.append(str.data(), n);
+    out_ctxt.append(str.data(), n);
   }
-  inline void put(str::u8v str) { ctxt.append(str.data(), str.size()); }
-  inline void put(size_t n, char fill) { ctxt.append(n, fill); }
+  inline void put(str::u8v str) { out_ctxt.append(str.data(), str.size()); }
+  inline void put(size_t n, char fill) { out_ctxt.append(n, fill); }
   // inline const char* debug_data() const { return ctxt.data(); }
 };
 
@@ -190,6 +192,23 @@ template <typename Tuple>
 void format_arg_dispatch(format_output &out, const Tuple &args,
                          size_t target_index, const format_spec &spec);
 
+template <typename Tuple, size_t I = 0>
+inline int extract_integer_from_args_tuple(const Tuple &args, size_t target_index) {
+  if constexpr (I < std::tuple_size_v<Tuple>) {
+    if (I == target_index) {
+      using T = std::tuple_element_t<I, Tuple>;
+      using BaseType = std::remove_cvref_t<T>;
+      if constexpr (std::is_integral_v<BaseType>) {
+        return static_cast<int>(std::get<I>(args));
+      }
+      else {
+        throw format_error("gr::toy::format => nested argument is not integer");
+      }
+    }
+    return extract_integer_from_args_tuple<Tuple, I + 1>(args, target_index);
+  }
+  throw format_error("gr::toy::format => Argument index out of range");
+}
 /**
  * @brief Check and parse indexed placeholder like {number} in format spec
  * @param ptr Current pointer position (should point to '{')
@@ -250,17 +269,8 @@ try_parse_indexed_placeholder(const char *&ptr, const char *end,
         }
       }
 
-      str::u8 temp_out;
-      format_output arg_out(temp_out);
-      format_arg_dispatch(arg_out, args_storage, nested_index, format_spec{});
-
       try {
-        int value;
-        auto status = gr::toy::sstoi(temp_out.data(), temp_out.size(), value);
-        if (status.ec != std::errc{}) {
-          throw format_error("gr::toy::format => can not convert chars to "
-                             "integer when parse indexed placeholder");
-        }
+        int value = extract_integer_from_args_tuple(args_storage, nested_index);
         if (is_width) {
           spec.width = value;
         } else {
@@ -315,22 +325,15 @@ try_parse_empty_placeholder(const char *&ptr, const char *end,
       }
     }
 
-    str::u8 temp_out;
-    format_output arg_out(temp_out);
-    format_arg_dispatch(arg_out, args_storage, nested_index, format_spec{});
-
     try {
-      int value;
-      auto status = gr::toy::sstoi(temp_out.data(), temp_out.size(), value);
-      if (status.ec != std::errc{}) {
-        throw format_error("gr::toy::format => can not convert chars to "
-                           "integer when parse empty placeholder");
-      }
+      int value = extract_integer_from_args_tuple(args_storage, nested_index);
       if (is_width) {
         spec.width = value;
       } else {
         spec.precision = value;
       }
+    } catch (const format_error& e){
+      throw;
     } catch (...) {
       throw format_error("gr::toy::format => Invalid value from argument");
     }
@@ -551,32 +554,39 @@ inline void format_string(format_output &out, const str::u8 &value,
   format_string_impl(out, value.data(), value.size(), spec);
 }
 
-inline std::tuple<unsigned, bool>
+struct pre_parsed_integr_result{
+  uint8_t base{10};
+  bool uppercase{false};
+};
+inline pre_parsed_integr_result
 pre_parse_integer_type(const format_spec &spec) {
-  unsigned base = 10;
+  uint8_t base = 10;
   bool uppercase = false;
 
   switch (spec.type) {
-  case 'b':
-  case 'B':
-    base = 2;
-    uppercase = (spec.type == 'B');
-    break;
-  case 'o':
-    base = 8;
+  case 'd':
+  case 'D':
+    base = 10;
     break;
   case 'x':
   case 'X':
     base = 16;
     uppercase = (spec.type == 'X');
     break;
-  case 'd':
-  case 'D':
+  case 'b':
+  case 'B':
+    base = 2;
+    uppercase = (spec.type == 'B');
+    break;
+  case 'o':
+  case 'O':
+    base = 8;
+    uppercase = (spec.type == 'O');
+    break;
   default:
     base = 10;
-    break;
   }
-  return std::make_tuple(base, uppercase);
+  return {base, uppercase};
 }
 
 template <typename T> constexpr unsigned make_general_integer_buffer_size() {
@@ -785,7 +795,7 @@ inline void auto_duration_type(format_output &out, const duration_t &_duration,
   }
 
   if (spec.alternate && nullptr != unit) {
-    str::u8 buffer;
+    format_output_context buffer;
     format_output out_proxy(buffer);
     format_spec spec_ = spec;
     spec_.align = '<';
@@ -1075,15 +1085,6 @@ void format_pointer(format_output &out, const T *value,
  * Fallback for types without specialized formatter
  */
 template <typename T> struct formatter;
-// template <typename T> struct formatter {
-//   void operator()(format_output &result, const T &value,
-//                   const format_spec &spec) const {
-//     std::stringstream ss;
-//     ss << value;
-//     auto str = ss.str();
-//     format_string(result, str::u8v(str.data(), str.size()), spec);
-//   }
-// };
 
 // Specializations for various types
 template <size_t N> struct formatter<char[N]> {
@@ -1125,16 +1126,44 @@ template <> struct formatter<char *> {
   }
 };
 
+template <typename char_type>
+void format_char_impl(format_output &out, char_type value, const format_spec &spec){
+  switch(spec.type){
+    case '\0':
+    case 's':{
+      // out as string
+      if constexpr (sizeof(char_type) == 1) {
+        // direct align char
+        apply_alignment(out, &value, 1, spec);
+      }else{
+        // convert to utf-8
+        gr::uc::codepoint cp(value);
+        auto chunk = cp.chunk_u8();
+        apply_alignment(out, chunk.buf, chunk.size(), spec);
+      }
+    }
+    break;
+    default:
+      // out as integer
+      format_integer_impl(out, int(value), spec);
+  }
+}
+
 template <> struct formatter<char> {
   void operator()(format_output &out, char value, const format_spec &spec) {
-    switch (spec.type) {
-    case 'd':
-      format_integer_impl(out, int(value), spec);
-      break;
-    case 's':
-    default:
-      apply_alignment(out, &value, 1, spec);
-    }
+    format_char_impl(out, value, spec);
+  }
+};
+
+template <> struct formatter<char16_t> {
+  void operator()(format_output &out, char16_t value, const format_spec &spec) {
+    format_char_impl(out, value, spec);
+  }
+};
+
+template <> struct formatter<char32_t> {
+  void operator()(format_output &out, char32_t value, const format_spec &spec) {
+    format_char_impl(out, value, spec);
   }
 };
 
@@ -1670,7 +1699,9 @@ private:
   static constexpr bool is_supported_integer_v = 
     std::is_integral_v<std::remove_reference_t<T>> && 
     !std::is_same_v<std::remove_cvref_t<T>, bool> && 
-    !std::is_same_v<std::remove_cvref_t<T>, char>;
+    !std::is_same_v<std::remove_cvref_t<T>, char> &&
+    !std::is_same_v<std::remove_cvref_t<T>, char16_t> &&
+    !std::is_same_v<std::remove_cvref_t<T>, char32_t>;
 
   // Type trait to check if a type is supported for floating point formatting
   template<typename T>
@@ -1679,7 +1710,7 @@ private:
   // Type trait to check if a type is supported for string formatting
   template<typename T>
   static constexpr bool is_supported_string_v = 
-    std::is_same_v<std::remove_cvref_t<T>, const char*> || 
+    std::is_same_v<std::remove_cvref_t<T>, const char*> ||
     std::is_same_v<std::remove_cvref_t<T>, char*> ||
     std::is_same_v<std::remove_cvref_t<T>, std::string> ||
     std::is_same_v<std::remove_cvref_t<T>, std::string_view> ||
@@ -1696,8 +1727,8 @@ private:
 
   // Type trait to check if a type is char
   template<typename T>
-  static constexpr bool is_char_v = std::is_same_v<T, char>;
-
+  static constexpr bool is_char_v = std::is_same_v<T, char> ||
+    std::is_same_v<T, char16_t> || std::is_same_v<T, char32_t>;
 
   template<typename T>
   static consteval void constexpr_check_type_specifier(char spec_type) {
@@ -1713,7 +1744,7 @@ private:
       switch (spec_type) {
         case 'd': case 'D':
         case 'x': case 'X':
-        case 'o':
+        case 'o': case 'O':
         case 'b': case 'B':
           return;
         default:
@@ -1761,6 +1792,13 @@ private:
       // Char types support: d, s
       switch (spec_type) {
         case 'd':
+        case 'D':
+        case 'x':
+        case 'X':
+        case 'b':
+        case 'B':
+        case 'o':
+        case 'O':
         case 's':
         case '\0': // Default
           return;
@@ -1915,9 +1953,8 @@ template <typename T>
 str::u8 format(const T& v){
   static format_spec spec;
   str::u8 res;
-  // res.reserve(32);
   format_output out(res);
-  gr::toy::detail::format_arg(out, v, spec);
+  gr::toy::detail::formatter<T>{}(out, v, spec);
   return res;
 }
 
@@ -1932,11 +1969,11 @@ str::u8 format(fmt_string<Args...> fmt, Args &&...args) {
   }
   estimated_size = std::min(estimated_size, fmt.size() * 3);
 
-  str::u8 result(estimated_size);
-  // result.reserve(estimated_size);
-  auto out = format_output(result);
+  format_output_context out_ctxt;
+  out_ctxt.reserve(estimated_size);
+  auto out = format_output(out_ctxt);
   format_to(out, fmt, std::forward<Args>(args)...);
-  return result;
+  return out_ctxt;
 }
 
 namespace chrono {
