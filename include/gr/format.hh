@@ -140,11 +140,76 @@ public:
 };
 
 /**
+ * @brief string buffer class type is for testing
+ * @note this is not necessary
+ */
+template <typename char_type>
+class string_buffer : public utils::cbuf<char_type>{
+public:
+  string_buffer() = default;
+  template<size_t N>
+  string_buffer(const char (&s)[N]) : gr::utils::cbuf<char>(){
+    this->append(s, N - 1);
+  }
+
+  bool operator==(const string_buffer& rhs) const{
+    if(this->size() != rhs.size()) return false;
+    auto rhs_beg = rhs._beg;
+    for(auto p = this->_beg; p < this->_end; ++p, ++rhs_beg){
+      if(*p != *rhs_beg) return false;
+    }
+    return true;
+  }
+
+  bool operator!=(const string_buffer& rhs) const{
+    return !(*this == rhs);
+  }
+
+  void append(char c){
+    pre_alloc(1);
+    *this->_end++ = c;
+    *this->_end = 0;
+  }
+
+  void append(const char* s, size_t n){
+    pre_alloc(n);
+    std::copy_n(s, n, this->_end);
+    this->_end += n;
+    *this->_end = 0;
+  }
+
+  void append(const char* s){
+    std::string_view vw(s);
+    append(vw.data(), vw.size());
+  }
+
+  void append(size_t n, char fill){
+    pre_alloc(n);
+    std::fill(this->_end, this->_end + n, fill);
+    this->_end += n;
+    *this->_end = 0;
+  }
+
+  auto move_as_cbuf() -> utils::cbuf<char> {
+    return utils::cbuf<char>(std::move(*this));
+  }
+
+private:
+  inline void pre_alloc(size_t n){
+    if(this->_end + n + 1 > this->_cap){
+      this->reserve(this->size()*2 + n + 1);
+    }
+  }
+};
+
+/**
  * @brief Output wrapper for formatting operations
  * Provides a unified interface for appending formatted content
  */
 
-using format_output_context = str::u8;
+// using format_output_context = str::u8;
+using format_output_context = string_buffer<char>;
+
 class format_output {
   format_output_context &out_ctxt;
 
@@ -155,7 +220,7 @@ public:
   } // unsafe method, only for constexpr str
   inline void put(const char *str, size_t n) { out_ctxt.append(str, n); }
   inline void put(char c) { out_ctxt.append(&c, 1); };
-  inline void put(const format_output_context &str, size_t n) { out_ctxt.append(str, n); }
+  inline void put(const format_output_context &str, size_t n) { out_ctxt.append(str.data(), n); }
   inline void put(const format_output_context &str) { out_ctxt.append(str.data(), str.size()); }
   inline void put(const std::string &str) {
     out_ctxt.append(str.data(), str.size());
@@ -173,13 +238,14 @@ public:
  * Contains all formatting options parsed from format strings
  */
 struct format_spec {
-  int width = -1;     // Field width (-1 means unspecified)
-  int precision = -1; // Precision for floating point/strings
-  char fill = ' ';    // Fill character for alignment
-  char align = '\0';   // Alignment: < left, > right, ^ center
-  char sign = '-';    // Sign: - minus only, + plus/minus, space for positive
+  format_spec() = default;
+  int16_t width = -1;     // Field width (-1 means unspecified)
+  int16_t precision = -1; // Precision for floating point/strings
+  unsigned char type = '\0';       // Type specifier (d, x, f, e, etc.)
+  unsigned char fill = ' ';    // Fill character for alignment
+  unsigned char align = '\0';   // Alignment: < left, > right, ^ center
+  unsigned char sign = '-';    // Sign: - minus only, + plus/minus, space for positive
   bool alternate = false; // # Alternate form (0x, 0b prefixes)
-  char type = '\0';       // Type specifier (d, x, f, e, etc.)
   const char *fmt_beg = nullptr;
   const char *fmt_end = nullptr;
   inline str::u8v get_pattern() const {
@@ -461,7 +527,7 @@ GR_CONSTEXPR_OR_INLINE format_spec parse_format_spec_with_args(
       if (*ptr >= '0' && *ptr <= '9') {
         int width = 0;
         do {
-          width = width * 10 + (*ptr - '0');
+          width = width * 10 + toy::detail::char_to_digit(*ptr);
           ++ptr;
           if (width > MAX_WIDTH) {
             throw format_error("gr::toy::format => Width value too large");
@@ -1244,6 +1310,12 @@ template <> struct formatter<std::string> {
   }
 };
 
+template<> struct formatter<string_buffer<char>>{
+  void operator()(format_output &out, const string_buffer<char>& value,
+                  const format_spec &spec) const{
+    format_string_impl(out, value.data(), value.size(), spec);
+  }
+};
 // Integer type specializations
 template <> struct formatter<short> {
   void operator()(format_output &out, int value,
@@ -1419,7 +1491,7 @@ GR_CONSTEXPR_OR_INLINE void parse_argument_index(const char *format_start,
     arg_index = 0;
     for (const char *p = index_start; p < index_end; ++p) {
       if (*p >= '0' && *p <= '9') {
-        arg_index = arg_index * 10 + (*p - '0');
+        arg_index = arg_index * 10 + toy::detail::char_to_digit(*p);
         has_explicit_index = true;
       } else {
         throw format_error("gr::toy::format => Invalid argument index");
@@ -1950,16 +2022,19 @@ void format_to(format_output &out, fmt_string<Args...> fmt, Args &&...args) {
  * @param v any supported type value to convert
  */
 template <typename T>
-str::u8 format(const T& v){
+format_output_context format(const T& v){
   static format_spec spec;
-  str::u8 res;
+  format_output_context res;
   format_output out(res);
   gr::toy::detail::formatter<T>{}(out, v, spec);
+  // str::u8 ss(res.data(), res.size());
+  // ss.hack_with_cbuf(res.to_cbuf());
+  // return ss;
   return res;
 }
 
 template <typename... Args>
-str::u8 format(fmt_string<Args...> fmt, Args &&...args) {
+format_output_context format(fmt_string<Args...> fmt, Args &&...args) {
   // Precise memory pre-allocation
   size_t estimated_size = fmt.size();
   if constexpr (sizeof...(Args) > 0) {
@@ -1973,7 +2048,15 @@ str::u8 format(fmt_string<Args...> fmt, Args &&...args) {
   out_ctxt.reserve(estimated_size);
   auto out = format_output(out_ctxt);
   format_to(out, fmt, std::forward<Args>(args)...);
+  // for(auto k :out_ctxt){
+  //   std::cout << k;
+  // }
+  // std::cout << std::endl;
+  // str::u8 ss(out_ctxt.data(), out_ctxt.size());
+  // ss.hack_with_cbuf(out_ctxt.to_cbuf());
+  // return ss;
   return out_ctxt;
+
 }
 
 namespace chrono {

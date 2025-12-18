@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <gr/console.hh>
-#include <gr/performance_timer.hh>
+#include <gr/performance.hh>
 
 // 预计算 10^0 ~ 10^6（避免重复乘法）
 constexpr uint64_t POW10_TABLE[] = {1,
@@ -266,7 +266,7 @@ void test_ftoss() {
   volatile uint64_t opt = 0;
   unsigned iteration = 100000;
   {
-    PerformanceTimer timer("toy::split => double");
+    performance::timer timer("toy::split => double");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : d) {
         auto parts = toy::detail::_split_float_u<double>(v, 8);
@@ -276,7 +276,7 @@ void test_ftoss() {
   }
   {
     opt = 0;
-    PerformanceTimer timer("get_double_parts");
+    performance::timer timer("get_double_parts");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : d) {
         auto parts = get_double_parts(v, 8);
@@ -294,7 +294,7 @@ void test_ftoss() {
   console::writeln("=== split float ===");
   opt = 0;
   {
-    PerformanceTimer timer("toy::split => float");
+    performance::timer timer("toy::split => float");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : f) {
         auto parts = toy::detail::_split_float_u<float>(v, 8);
@@ -304,7 +304,7 @@ void test_ftoss() {
   }
   {
     opt = 0;
-    PerformanceTimer timer("get_float_parts");
+    performance::timer timer("get_float_parts");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : f) {
         auto parts = get_float_parts(v, 8);

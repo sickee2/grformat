@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <gr/config.hh>
+#include "config.hh"
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -245,13 +245,13 @@ public:
     if (!tmp) {
       throw std::runtime_error("gr::cbuf::create => memory allocation failed");
     }
-    return cbuf(tmp, tmp + n);
+    return cbuf(tmp, tmp + n, tmp + n);  // 修复：传递容量
   }
 
   /**
    * @brief Default constructor - creates empty buffer
    */
-  cbuf() noexcept : _beg(nullptr), _end(nullptr) {}
+  cbuf() noexcept : _beg(nullptr), _end(nullptr), _cap(nullptr) {}
 
   /**
    * @brief Destructor - frees allocated memory
@@ -259,7 +259,7 @@ public:
   ~cbuf() noexcept {
     if (_beg) {
       std::free(_beg);
-      _beg = _end = nullptr;
+      _beg = _end = _cap = nullptr;
     }
   }
 
@@ -268,7 +268,9 @@ public:
    * @param v Source buffer to move from
    * @note Source buffer will be left in empty state
    */
-  cbuf(cbuf &&v) noexcept : _beg(v._beg), _end(v._end) { v._beg = v._end = nullptr; }
+  cbuf(cbuf &&v) noexcept : _beg(v._beg), _end(v._end), _cap(v._cap) {
+    v._beg = v._end = v._cap = nullptr;
+  }
 
   /**
    * @brief Force assingment operator as move assignment operator
@@ -283,7 +285,8 @@ public:
       std::free(_beg);
     _beg = v._beg;
     _end = v._end;
-    v._beg = v._end = nullptr;
+    _cap = v._cap;
+    v._beg = v._end = v._cap = nullptr;
     return *this;
   }
 
@@ -310,24 +313,47 @@ public:
     return cbuf(beg_, end_);
   }
 
-  /**
-   * @brief Reallocate buffer to new size (grow only)
-   * @param n New number of elements
-   * @throws std::runtime_error if reallocation fails
-   * @note Only grows the buffer, does not shrink
-   */
-  void realloc(size_t n) {
-    size_t sz = _end - _beg;
-    if (n <= sz) {
+  void resize(size_t n) {
+    if (n == size()) {
+      return;  // 大小不变，直接返回
+    }
+    if (n <= capacity()) {
+
+      _end = _beg + n;
       return;
     }
+    T *new_beg = (T *)std::realloc(_beg, sizeof(T) * n);
+    if (!new_beg) {
+      throw std::runtime_error("gr::cbuf::resize => memory allocation failed");
+    }
+    _beg = new_beg;
+    _end = _beg + n;
+    _cap = _end;
+  }
 
-    T *tmp = (T *)std::realloc(_beg, sizeof(T) * n);
-    if (tmp) {
-      _beg = tmp;
-      _end = _beg + n;
-    } else {
-      throw std::runtime_error("gr::cbuf::realloc => failed!");
+  void reserve(size_t n) {
+    if (n <= capacity()) {
+      return;
+    }
+    if(!_beg){
+      size_t current_size = size();
+      T *new_beg = (T *)std::malloc(sizeof(T) * n);
+      if (!new_beg) {
+        throw std::runtime_error("gr::cbuf::reserve => memory allocation failed");
+      }
+      _beg = new_beg;
+      _end = _beg + current_size;
+      _cap = _beg + n;
+    }else{
+      size_t current_size = size();
+      T *new_beg = (T *)std::realloc(_beg, sizeof(T) * n);
+      if (!new_beg) {
+        throw std::runtime_error("gr::cbuf::reserve => memory allocation failed");
+      }
+
+      _beg = new_beg;
+      _end = _beg + current_size;
+      _cap = _beg + n;
     }
   }
 
@@ -340,6 +366,7 @@ public:
   T &operator[](size_t index) noexcept { return *(_beg + index); }
   const T &operator[](size_t index) const noexcept { return *(_beg + index); }
 
+  const T* data() const { return _beg; }
   /**
    * @brief Iterator to beginning of buffer
    * @return Pointer to first element
@@ -364,6 +391,14 @@ public:
    */
   GR_CONSTEXPR_OR_INLINE size_t bytes() const noexcept {
     return sizeof(T) * (_end - _beg);
+  }
+
+  GR_CONSTEXPR_OR_INLINE size_t capacity_bytes() const noexcept {
+    return sizeof(T) * (_cap - _beg);
+  }
+
+  GR_CONSTEXPR_OR_INLINE size_t capacity() const noexcept {
+    return (_cap - _beg);
   }
 
   /**
@@ -392,12 +427,15 @@ public:
   void swap(cbuf &other) noexcept {
     T *tmp_beg = _beg;
     T *tmp_end = _end;
+    T *tmp_cap = _cap;
 
     _beg = other._beg;
     _end = other._end;
+    _cap = other._cap;
 
     other._beg = tmp_beg;
     other._end = tmp_end;
+    other._cap = tmp_cap;
   }
 
   /**
@@ -416,7 +454,7 @@ public:
     if (!p || n == 0) {
       throw std::invalid_argument("gr::cbuf::attach => invalid pointer or size");
     }
-    return cbuf{p, p + n};
+    return cbuf{p, p + n, p + n};  // 修复：传递容量
   }
 
   /**
@@ -428,7 +466,7 @@ public:
    */
   [[nodiscard]] std::pair<T *, size_t> detach() noexcept {
     std::pair<T *, size_t> ret = {_beg, size()};
-    _beg = _end = nullptr;
+    _beg = _end = _cap = nullptr;
     return ret;
   }
 
@@ -452,16 +490,16 @@ public:
     return ret;
   }
 
-private:
+protected:
   T *_beg; ///< Pointer to beginning of buffer
   T *_end; ///< Pointer to one past end of buffer
-
+  T *_cap; ///< Pointer to end of capacity
   /**
    * @brief Private constructor for internal use
    * @param ibeg Pointer to buffer start
    * @param iend Pointer to buffer end
    */
-  cbuf(T *ibeg, T *iend) : _beg(ibeg), _end(iend) {}
+  cbuf(T *ibeg, T *iend, T *icap) : _beg(ibeg), _end(iend), _cap(icap) {}
 };
 
 template <typename T>

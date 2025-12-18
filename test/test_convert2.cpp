@@ -2,7 +2,7 @@
 #include <gr/console.hh>
 #include <gr/string.hh>
 #include <gr/utf_sequence.hh>
-#include <gr/performance_timer.hh>
+#include <gr/performance.hh>
 #include <random>
 using namespace std;
 
@@ -185,7 +185,7 @@ void test_utf_iter_performance(){
   str::u8 result1;
 
   {
-    PerformanceTimer t1("xiter");
+    performance::timer t1("xiter");
     auto xit = gr::str::iter<char16_t>(u16);
     for(;xit;++xit){
       result1.append((*xit).chunk_u8().view());
@@ -195,7 +195,7 @@ void test_utf_iter_performance(){
   str::u8 result2;
 
   {
-    PerformanceTimer t2("uc::iter::value().chunk_u8()");
+    performance::timer t2("uc::iter::value().chunk_u8()");
     auto uit = u16.ubegin();
     for(;uit;++uit){
       result2.append(uit.value().chunk_u8().view());
@@ -204,7 +204,7 @@ void test_utf_iter_performance(){
   str::u8 result_x;
 
   {
-    PerformanceTimer t2("uc::iter->chunk_u8()");
+    performance::timer t2("uc::iter->chunk_u8()");
     auto uit = u16.ubegin();
     for(;uit;++uit){
       result_x.append(uit->chunk_u8().view());
@@ -213,7 +213,7 @@ void test_utf_iter_performance(){
   str::u8 result_x2;
 
   {
-    PerformanceTimer t2("(*uc::iter)::chunk_u8");
+    performance::timer t2("(*uc::iter)::chunk_u8");
     auto uit = u16.ubegin();
     for(;uit;++uit){
       result_x2.append((*uit).chunk_u8().view());
@@ -222,7 +222,7 @@ void test_utf_iter_performance(){
 
   str::u8 result3;
   {
-    PerformanceTimer t3("str::to_u8");
+    performance::timer t3("str::to_u8");
     result3 = u16.to_u8();
   }
 

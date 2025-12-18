@@ -1,101 +1,103 @@
 # Compiler settings
-CXX = g++
+cxx = g++
 # CXX = clang++
 
-INCLUDE = include
+inc = include
 
-CXXFLAGS = -O2 -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -I$(INCLUDE)
-# CXXFLAGS = -g -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -Iinclude
+cxxflags = -O2 -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -I$(inc)
+# cxxflags = -g -march=native -Wall -Wextra -std=c++2c -MMD -MP -MF $(@:%.o=%.d) -Iinc
 
 # Build directory
-BUILD_DIR = build
+build_dir = build
 
 # Target executable
-TARGET = $(BUILD_DIR)/grstr
+target = $(build_dir)/grstr
 
 # Source files
-SRC_DIR = src
-TEST_DIR = test
+src_dir = src
+test_dir = test
 
-GR_SRC = $(SRC_DIR)/gr/utf_sequence.cpp \
-				 $(SRC_DIR)/gr/utf_string.cpp 
-				 $(SRC_DIR)/gr/external_data.cpp 
+gr_src = $(src_dir)/gr/utf_sequence.cpp \
+				 $(src_dir)/gr/utf_string.cpp \
+				 $(src_dir)/gr/external_data.cpp 
 
-CPP_SRC = $(GR_SRC)
+cpp_src = $(gr_src)
 
-CPP_SRC += $(TEST_DIR)/test.cpp
-CPP_SRC += $(TEST_DIR)/test_char_conv_performance.cpp
-# CPP_SRC += $(TEST_DIR)/test_ftoss.cpp
-# CPP_SRC += $(TEST_DIR)/test_format.cpp
-CPP_SRC += $(TEST_DIR)/test_format_performance.cpp
-# CPP_SRC += $(TEST_DIR)/test_from_chars.cpp
-# CPP_SRC += $(TEST_DIR)/test_sstoi_edgecases.cpp
-# CPP_SRC += $(TEST_DIR)/test_bom.cpp
-# CPP_SRC += $(TEST_DIR)/test_cbuf.cpp
-CPP_SRC += $(TEST_DIR)/test_convert.cpp
-CPP_SRC += $(TEST_DIR)/test_convert2.cpp
-# CPP_SRC += $(TEST_DIR)/test_cptr.cpp
-# CPP_SRC += $(TEST_DIR)/test_endian.cpp
-# CPP_SRC += $(TEST_DIR)/test_to_chars.cpp
-# CPP_SRC += $(TEST_DIR)/test_iconv.cpp
-# CPP_SRC += $(TEST_DIR)/test_logger.cpp
-# CPP_SRC += $(TEST_DIR)/test_print.cpp
-# CPP_SRC += $(TEST_DIR)/test_printable.cpp
-# CPP_SRC += $(TEST_DIR)/test_RE2.cpp
-# CPP_SRC += $(TEST_DIR)/test_stoi.cpp
-# CPP_SRC += $(TEST_DIR)/test_trim.cpp
-# CPP_SRC += $(TEST_DIR)/test_upper_lower.cpp
-# CPP_SRC += $(TEST_DIR)/test_utf_string.cpp
-# CPP_SRC += $(TEST_DIR)/test_utfiter.cpp
+cpp_src += $(test_dir)/test.cpp
+# cpp_src += $(test_dir)/test_char_conv_performance.cpp
+# cpp_src += $(test_dir)/test_ftoss.cpp
+# cpp_src += $(test_dir)/test_format.cpp
+# cpp_src += $(test_dir)/test_format_performance.cpp
+# cpp_src += $(test_dir)/test_from_chars.cpp
+# cpp_src += $(test_dir)/test_sstoi_edgecases.cpp
+# cpp_src += $(test_dir)/test_bom.cpp
+# cpp_src += $(test_dir)/test_cbuf.cpp
+# cpp_src += $(test_dir)/test_convert.cpp
+# cpp_src += $(test_dir)/test_convert2.cpp
+# cpp_src += $(test_dir)/test_cptr.cpp
+# cpp_src += $(test_dir)/test_endian.cpp
+# cpp_src += $(test_dir)/test_to_chars.cpp
+# cpp_src += $(test_dir)/test_iconv.cpp
+# cpp_src += $(test_dir)/test_logger.cpp
+# cpp_src += $(test_dir)/test_print.cpp
+# cpp_src += $(test_dir)/test_printable.cpp
+# cpp_src += $(test_dir)/test_RE2.cpp
+# cpp_src += $(test_dir)/test_stoi.cpp
+# cpp_src += $(test_dir)/test_trim.cpp
+# cpp_src += $(test_dir)/test_upper_lower.cpp
+# cpp_src += $(test_dir)/test_utf_string.cpp
+# cpp_src += $(test_dir)/test_utfiter.cpp
 
 
-# OBJ = $(BUILD_DIR)/main.o
-OBJECTS = $(CPP_SRC:%.cpp=$(BUILD_DIR)/%.o)
+# OBJ = $(build_dir)/main.o
+objects = $(cpp_src:%.cpp=$(build_dir)/%.o)
 
 # Dependency files
-DEP_DIR = $(BUILD_DIR)/.deps
+dep_dir = $(build_dir)/.deps
 
 # Detect operating system
-UNAME_S := $(shell uname -s)
+uname_s := $(shell uname -s)
 MSYSTEM := $(shell echo $$MSYSTEM 2>/dev/null)
 
 # Set linker flags based on operating system
-ifeq ($(UNAME_S), Linux)
-    LDFLAGS = $(shell pkg-config --libs re2) -liconv -lfmt
+ifeq ($(uname_s), Linux)
+	ldflags = $(shell pkg-config --libs re2) -liconv -lfmt
 else
-    LDFLAGS = $(shell pkg-config --libs re2) -liconv -lfmt
+	ldflags = $(shell pkg-config --libs re2) -liconv -lfmt
 endif
 
 # Default target
-all: $(BUILD_DIR) $(TARGET)
+all: $(build_dir) $(target)
 
 # Create build directory
-$(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(BUILD_DIR)/gr
-	@mkdir -p $(BUILD_DIR)/test
+$(build_dir):
+	@mkdir -p $(build_dir)
+	@mkdir -p $(build_dir)/gr
+	@mkdir -p $(build_dir)/test
 
 # Compile
-$(BUILD_DIR)/%.o: %.cpp
+$(build_dir)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(cxx) $(cxxflags) -c $< -o $@
 
 # Link
-$(TARGET): $(OBJECTS)
+$(target): $(objects)
 	@echo linking...
-	@$(CXX) $^ -o $@ $(LDFLAGS)
-
+	@$(cxx) $^ -o $@ $(ldflags)
 
 # 包含依赖文件
--include $(wildcard $(BUILD_DIR)/*.d)
--include $(wildcard $(BUILD_DIR)/**/*.d)
+-include $(wildcard $(build_dir)/*.d)
+-include $(wildcard $(build_dir)/**/*.d)
 
 # 清理
 clean:
-	@rm -rf $(BUILD_DIR) $(TARGET)
+	@rm -rf $(build_dir)/test $(target)
 
+clean_all:
+	@rm -rf $(build_dir) $(target)
 # 运行
-run: $(TARGET)
-	./$(TARGET)
+run: $(target)
+	./$(target)
 
-.PHONY: all clean run
+
+.PHONY: all clean clean_all run

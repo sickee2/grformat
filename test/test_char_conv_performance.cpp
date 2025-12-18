@@ -1,7 +1,7 @@
 #include "gr/detail/toy_charconv.hh"
 #include <cstdint>
 #include <gr/console.hh>
-#include <gr/performance_timer.hh>
+#include <gr/performance.hh>
 #include <stdexcept>
 using namespace gr;
 
@@ -17,7 +17,7 @@ void test_chars_conv_performance() {
     };
     console::writeln("\n=== float to chars ===");
     {
-      PerformanceTimer t("toy::ftoss");
+      performance::timer t("toy::ftoss");
       char buffer[128] = {};
       for (int i = 0; i < iteration; i++) {
         for (auto v : data) {
@@ -29,7 +29,7 @@ void test_chars_conv_performance() {
       }
     }
     {
-      PerformanceTimer t("std::to_char");
+      performance::timer t("std::to_char");
       char buffer[128] = {};
       for (int i = 0; i < iteration; i++) {
         for (auto v : data) {
@@ -50,7 +50,7 @@ void test_chars_conv_performance() {
     };
     console::writeln("\n=== integer to chars ===");
     {
-      PerformanceTimer t("toy::itoss");
+      performance::timer t("toy::itoss");
       char buffer[128] = {};
       for (int i = 0; i < iteration; i++) {
         for (auto v : data) {
@@ -62,7 +62,7 @@ void test_chars_conv_performance() {
       }
     }
     {
-      PerformanceTimer t("std::to_char");
+      performance::timer t("std::to_char");
       char buffer[128] = {};
       for (int i = 0; i < iteration; i++) {
         for (auto v : data) {
@@ -84,7 +84,7 @@ void test_chars_conv_performance() {
     console::writeln("\n=== chars to float ===");
     uint64_t t1, t2;
     {
-      PerformanceTimer t("toy::sstof", t1);
+      performance::timer t("toy::sstof", t1);
       double value;
       for (int i = 0; i < iteration; i++) {
         for (auto v : data) {
@@ -96,7 +96,7 @@ void test_chars_conv_performance() {
       }
     }
     {
-      PerformanceTimer t("std::from_chars", t2);
+      performance::timer t("std::from_chars", t2);
       double value;
       for (int i = 0; i < iteration; i++) {
         for (auto v : data) {
@@ -118,7 +118,7 @@ void test_chars_conv_performance() {
     };
     console::writeln("\n=== chars to integer ===");
     {
-      PerformanceTimer t("toy::sstoi");
+      performance::timer t("toy::sstoi");
       volatile int64_t ks = 0;
       int64_t value = 0;
       for (int i = 0; i < iteration; i++) {
@@ -133,7 +133,7 @@ void test_chars_conv_performance() {
       }
     }
     {
-      PerformanceTimer t("std::from_chars");
+      performance::timer t("std::from_chars");
       volatile int64_t ks = 0;
       int64_t value = 0;
       for (int i = 0; i < iteration; i++) {

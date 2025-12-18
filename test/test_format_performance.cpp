@@ -7,7 +7,7 @@
 #include <vector>
 #include <cstdio>
 #include <sstream>
-#include <gr/performance_timer.hh>
+#include <gr/performance.hh>
 #include <iostream>
 #include <iomanip>
 #include <fmt/format.h>
@@ -19,14 +19,14 @@ void test_basic_formatting_performance() {
 
   // Integer formatting
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("Integer: {}", i);
       (void)result; // Prevent optimization
     }
   }
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("Integer: {}", i);
       (void)result; // Prevent optimization
@@ -34,7 +34,7 @@ void test_basic_formatting_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Integer: {}", i);
       (void)result;
@@ -43,7 +43,7 @@ void test_basic_formatting_performance() {
 
   // 添加 snprintf 对比
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "Integer: %d", i);
@@ -53,7 +53,7 @@ void test_basic_formatting_performance() {
 
   // 添加 ostringstream 对比
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < iterations; ++i) {
       std::ostringstream oss;
       oss << "Integer: " << i;
@@ -65,14 +65,14 @@ void test_basic_formatting_performance() {
   gr::console::write("--- Floating-point formatting ---\n");
   // Floating-point formatting
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("Float: {:.2f}", 3.14159 + i * 0.001);
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("Float: {:.2f}", 3.14159 + i * 0.001);
       (void)result;
@@ -80,7 +80,7 @@ void test_basic_formatting_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Float: {:.2f}", 3.14159 + i * 0.001);
       (void)result;
@@ -89,7 +89,7 @@ void test_basic_formatting_performance() {
 
   // 添加 snprintf 对比
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "Float: %.2f", 3.14159 + i * 0.001);
@@ -99,7 +99,7 @@ void test_basic_formatting_performance() {
 
   // 添加 ostringstream 对比
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < iterations; ++i) {
       std::ostringstream oss;
       oss << "Float: " << std::fixed << std::setprecision(2) << (3.14159 + i * 0.001);
@@ -111,14 +111,14 @@ void test_basic_formatting_performance() {
   // String formatting
   gr::console::write("--- String formatting ---\n");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("String: {}", "Hello World");
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("String: {}", "Hello World");
       (void)result;
@@ -126,7 +126,7 @@ void test_basic_formatting_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("String: {}", "Hello World");
       (void)result;
@@ -135,7 +135,7 @@ void test_basic_formatting_performance() {
 
   // 添加 snprintf 对比
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "String: %s", "Hello World");
@@ -145,7 +145,7 @@ void test_basic_formatting_performance() {
 
   // 添加 ostringstream 对比
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < iterations; ++i) {
       std::ostringstream oss;
       oss << "String: " << "Hello World";
@@ -163,7 +163,7 @@ void test_complex_formatting_performance() {
   // Multi-argument formatting
   gr::console::write("--- Multi-argument formatting ---\n");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("Arguments: {}, {}, {:.2f}, {}", i, i * 2,
                                 3.14159, "test");
@@ -171,7 +171,7 @@ void test_complex_formatting_performance() {
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("Arguments: {}, {}, {:.2f}, {}", i, i * 2,
                                 3.14159, "test");
@@ -180,7 +180,7 @@ void test_complex_formatting_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Arguments: {}, {}, {:.2f}, {}", i, i * 2, 3.14159, "test");
       (void)result;
@@ -189,7 +189,7 @@ void test_complex_formatting_performance() {
 
   // 添加 snprintf 对比
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "Arguments: %d, %d, %.2f, %s", 
@@ -200,7 +200,7 @@ void test_complex_formatting_performance() {
 
   // 添加 ostringstream 对比
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < iterations; ++i) {
       std::ostringstream oss;
       oss << "Arguments: " << i << ", " << i * 2 << ", " 
@@ -213,14 +213,14 @@ void test_complex_formatting_performance() {
   // Indexed formatting
   gr::console::write("--- Indexed formatting ---\n");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("Indices: {2} {1} {0}", "zero", "one", "two");
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("Indices: {2} {1} {0}", "zero", "one", "two");
       (void)result;
@@ -228,7 +228,7 @@ void test_complex_formatting_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           gr::toy::format("Indices: {2} {1} {0}", "zero", "one", "two");
@@ -241,14 +241,14 @@ void test_complex_formatting_performance() {
   std::string result_k1;
   gr::str::u8 result_k2;
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result_k1 =
           fmt::format("Complex: {:>10} {:<8.2f} {:+}", i, 3.14159, i);
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result_k1 =
           std::format("Complex: {:>10} {:<8.2f} {:+}", i, 3.14159, i);
@@ -256,7 +256,7 @@ void test_complex_formatting_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result_k2 =
           gr::toy::format("Complex: {:>10} {:<8.2f} {:+}", i, 3.14159, i);
@@ -265,7 +265,7 @@ void test_complex_formatting_performance() {
 
   // 添加 snprintf 对比
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "Complex: %10d %-8.2f %+d", 
@@ -276,7 +276,7 @@ void test_complex_formatting_performance() {
 
   // 添加 ostringstream 对比
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < iterations; ++i) {
       std::ostringstream oss;
       oss << "Complex: " << std::setw(10) << std::right << i << " "
@@ -310,14 +310,14 @@ void test_memory_usage() {
   gr::console::writeln("---  memory allocation ---");
 
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       std_results.push_back(std::format("Test {}: {:.3f}", i, i * 1.234));
     }
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       toy_results.push_back(gr::toy::format("Test {}: {:.3f}", i, i * 1.234));
     }
@@ -325,7 +325,7 @@ void test_memory_usage() {
 
   // 添加 snprintf 内存分配测试
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "Test %d: %.3f", i, i * 1.234);
@@ -335,7 +335,7 @@ void test_memory_usage() {
 
   // 添加 ostringstream 内存分配测试
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < iterations; ++i) {
       std::ostringstream oss;
       oss << "Test " << i << ": " << std::fixed << std::setprecision(3) << i * 1.234;
@@ -384,14 +384,14 @@ void test_special_types_performance() {
   // Pointer formatting
   int value = 42;
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("Pointer: {}", static_cast<void *>(&value));
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("Pointer: {}", static_cast<void *>(&value));
       (void)result;
@@ -399,7 +399,7 @@ void test_special_types_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Pointer: {}", static_cast<void *>(&value));
       (void)result;
@@ -408,7 +408,7 @@ void test_special_types_performance() {
 
   // Time formatting (toy::format only)
   {
-    PerformanceTimer timer("Time formatting (toy::format)");
+    gr::performance::timer timer("Time formatting (toy::format)");
     auto now = std::chrono::system_clock::now();
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Time: {:f}", now);
@@ -418,7 +418,7 @@ void test_special_types_performance() {
 
   // Duration formatting (toy::format only)
   {
-    PerformanceTimer timer("Duration formatting (toy::format)");
+    gr::performance::timer timer("Duration formatting (toy::format)");
     auto duration = std::chrono::milliseconds(1234);
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Duration: {:a}", duration);
@@ -445,7 +445,7 @@ void test_throughput_comparison() {
   // std::format throughput test
   long long fmt_total_time = 0;
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < test_iterations; ++i) {
       auto result = fmt::format("Value: {} {} {:.2f}", i, i * 2, i * 0.1);
       (void)result;
@@ -454,7 +454,7 @@ void test_throughput_comparison() {
   }
   long long std_total_time = 0;
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < test_iterations; ++i) {
       auto result = std::format("Value: {} {} {:.2f}", i, i * 2, i * 0.1);
       (void)result;
@@ -465,7 +465,7 @@ void test_throughput_comparison() {
   // toy::format throughput test
   long long toy_total_time = 0;
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < test_iterations; ++i) {
       auto result = gr::toy::format("Value: {} {} {:.2f}", i, i * 2, i * 0.1);
       (void)result;
@@ -476,7 +476,7 @@ void test_throughput_comparison() {
   // std::snprintf throughput test
   long long snprintf_total_time = 0;
   {
-    PerformanceTimer timer("\tstd::snprintf");
+    gr::performance::timer timer("\tstd::snprintf");
     for (int i = 0; i < test_iterations; ++i) {
       char buffer[256];
       std::snprintf(buffer, sizeof(buffer), "Value: %d %d %.2f", i, i * 2, i * 0.1);
@@ -488,7 +488,7 @@ void test_throughput_comparison() {
   // std::ostringstream throughput test
   long long oss_total_time = 0;
   {
-    PerformanceTimer timer("\tstd::ostringstream");
+    gr::performance::timer timer("\tstd::ostringstream");
     for (int i = 0; i < test_iterations; ++i) {
       std::ostringstream oss;
       oss << "Value: " << i << " " << i * 2 << " " 
@@ -583,14 +583,14 @@ void test_edge_cases_performance() {
   // Empty string formatting
   gr::console::writeln("--- Empty string ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("{}", "");
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("{}", "");
       (void)result;
@@ -598,7 +598,7 @@ void test_edge_cases_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("{}", "");
       (void)result;
@@ -609,14 +609,14 @@ void test_edge_cases_performance() {
   gr::console::writeln("--- Long string ---");
   std::string long_str(1000, 'x');
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations / 10; ++i) {
       auto result = fmt::format("Long: {}", long_str);
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations / 10; ++i) {
       auto result = std::format("Long: {}", long_str);
       (void)result;
@@ -624,7 +624,7 @@ void test_edge_cases_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations / 10; ++i) {
       auto result = gr::toy::format("Long: {}", long_str);
       (void)result;
@@ -639,14 +639,14 @@ void test_mixed_types_performance() {
   // Mixed integer and string
   gr::console::writeln("--- Mixed int+str ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("ID: {}, Name: {}", i, "TestUser");
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("ID: {}, Name: {}", i, "TestUser");
       (void)result;
@@ -654,7 +654,7 @@ void test_mixed_types_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("ID: {}, Name: {}", i, "TestUser");
       (void)result;
@@ -664,7 +664,7 @@ void test_mixed_types_performance() {
   // Complex mixed types
   gr::console::writeln("--- Complex mixed types ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("Data: {:.2f} {} {:#x} {}", 3.14159 + i, "text",
                                 i, 42.5f);
@@ -672,7 +672,7 @@ void test_mixed_types_performance() {
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("Data: {:.2f} {} {:#x} {}", 3.14159 + i, "text",
                                 i, 42.5f);
@@ -681,7 +681,7 @@ void test_mixed_types_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("Data: {:.2f} {} {:#x} {:.2f}", 3.14159 + i, "text", int(i), 42.5f);
       (void)result;
@@ -697,14 +697,14 @@ void test_format_specifier_performance() {
   // Width and alignment
   gr::console::writeln("--- Width/align ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("{:<10} {:>8} {:^6}", i, i * 2, "text");
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("{:<10} {:>8} {:^6}", i, i * 2, "text");
       (void)result;
@@ -712,7 +712,7 @@ void test_format_specifier_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("{:<10} {:>8} {:^6}", i, i * 2, "text");
       (void)result;
@@ -722,14 +722,14 @@ void test_format_specifier_performance() {
   // Numeric formats
   gr::console::writeln("--- Numeric formats ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = fmt::format("{:#x} {:#o} {:.3e}", i, i, 3.14159 + i);
       (void)result;
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = std::format("{:#x} {:#o} {:.3e}", i, i, 3.14159 + i);
       (void)result;
@@ -737,7 +737,7 @@ void test_format_specifier_performance() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result = gr::toy::format("{:#x} {:#o} {:.3e}", i, i, 3.14159 + i);
       (void)result;
@@ -753,7 +753,7 @@ void test_real_world_scenarios() {
   // out message formatting (common use case)
   gr::console::writeln("--- out message ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           fmt::format("[{}] {}: {} (value: {:.3f})", "INFO", "process_data",
@@ -762,7 +762,7 @@ void test_real_world_scenarios() {
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           std::format("[{}] {}: {} (value: {:.3f})", "INFO", "process_data",
@@ -772,7 +772,7 @@ void test_real_world_scenarios() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           gr::toy::format("[{}] {}: {} (value: {:.3f})", "INFO", "process_data",
@@ -784,7 +784,7 @@ void test_real_world_scenarios() {
   // Data serialization format
   gr::console::writeln("--- Data serialization ---");
   {
-    PerformanceTimer timer("\tfmt::format");
+    gr::performance::timer timer("\tfmt::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           fmt::format(R"({{"id": {}, "name": "user{}", "score": {:.2f}}})", i,
@@ -793,7 +793,7 @@ void test_real_world_scenarios() {
     }
   }
   {
-    PerformanceTimer timer("\tstd::format");
+    gr::performance::timer timer("\tstd::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           std::format(R"({{"id": {}, "name": "user{}", "score": {:.2f}}})", i,
@@ -803,7 +803,7 @@ void test_real_world_scenarios() {
   }
 
   {
-    PerformanceTimer timer("\ttoy::format");
+    gr::performance::timer timer("\ttoy::format");
     for (int i = 0; i < iterations; ++i) {
       auto result =
           gr::toy::format(R"({{"id": {}, "name": "user{}", "score": {:.2f}}})",

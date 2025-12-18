@@ -1,6 +1,7 @@
 #include "test.hh"
 #include "gr/format.hh"
-#include "gr/performance_timer.hh"
+#include <gr/logger.hh>
+#include "gr/performance.hh"
 #include <charconv>
 #include <cstdint>
 #include <fmt/format.h>
@@ -51,7 +52,7 @@ void test_float_fmt_vs_toy_fmt() {
   console::writeln("== float test fixed");
   unsigned iteration = 100000;
   {
-    PerformanceTimer timer("fmt");
+    performance::timer timer("fmt");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = fmt::format("{:.4f}", v);
@@ -59,7 +60,7 @@ void test_float_fmt_vs_toy_fmt() {
     }
   }
   {
-    PerformanceTimer timer("toy");
+    performance::timer timer("toy");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = toy::format("{:.4f}", v);
@@ -68,7 +69,7 @@ void test_float_fmt_vs_toy_fmt() {
   }
   console::writeln("== float test scientific");
   {
-    PerformanceTimer timer("fmt");
+    performance::timer timer("fmt");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = fmt::format("{:.4e}", v);
@@ -76,7 +77,7 @@ void test_float_fmt_vs_toy_fmt() {
     }
   }
   {
-    PerformanceTimer timer("toy");
+    performance::timer timer("toy");
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = toy::format("{:.4e}", v);
@@ -130,6 +131,7 @@ void test_float_fmt_vs_toy_fmt() {
     console::writeln("{:g} => fmt='{}', toy='{}'", v, result_fmt, result_toy);
   }
 }
+
 void test_integer_fmt_vs_toy() {
   int64_t data[] = {
       -31415926535,   314159265358,     3141592653589,
@@ -145,7 +147,7 @@ void test_integer_fmt_vs_toy() {
   console::writeln("\n== test integer base 10");
   uint64_t fmt_dur = 0, toy_dur = 0;
   {
-    PerformanceTimer timer("fmt", fmt_dur);
+    performance::timer timer("fmt", fmt_dur);
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = fmt::format("{}", v);
@@ -153,7 +155,7 @@ void test_integer_fmt_vs_toy() {
     }
   }
   {
-    PerformanceTimer timer("toy", toy_dur);
+    performance::timer timer("toy", toy_dur);
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = toy::format("{}", v);
@@ -165,7 +167,7 @@ void test_integer_fmt_vs_toy() {
 
   console::writeln("\n== test integer base 16");
   {
-    PerformanceTimer timer("fmt", fmt_dur);
+    performance::timer timer("fmt", fmt_dur);
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = fmt::format("{:x}", v);
@@ -173,7 +175,7 @@ void test_integer_fmt_vs_toy() {
     }
   }
   {
-    PerformanceTimer timer("toy", toy_dur);
+    performance::timer timer("toy", toy_dur);
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = toy::format("{:x}", v);
@@ -185,7 +187,7 @@ void test_integer_fmt_vs_toy() {
 
   console::writeln("\n== test integer base 8");
   {
-    PerformanceTimer timer("fmt", fmt_dur);
+    performance::timer timer("fmt", fmt_dur);
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = fmt::format("{:o}", v);
@@ -193,7 +195,7 @@ void test_integer_fmt_vs_toy() {
     }
   }
   {
-    PerformanceTimer timer("toy", toy_dur);
+    performance::timer timer("toy", toy_dur);
     for (unsigned i = 0; i < iteration; i++) {
       for (auto v : data) {
         auto result = toy::format("{:o}", v);
@@ -205,15 +207,15 @@ void test_integer_fmt_vs_toy() {
 void micro_benchmark() {
   console::writeln("\n== Integer formatting breakdown");
 
-  unsigned loop = 5;
-  int64_t test_value = -31415926535;
+  unsigned loop = 1;
+  int64_t test_value = 31415;
   unsigned iteration = 100000;
 
   for (unsigned lp = 0; lp < loop; lp++) {
     console::writeln("loop iteration {}", lp);
     {
       uint64_t itoss_time = 0;
-      PerformanceTimer timer("\tstd::to_chars", itoss_time);
+      performance::timer timer("\tstd::to_chars", itoss_time);
       for (unsigned i = 0; i < iteration; i++) {
         char buffer[32]{};
         auto [ptr, len] = std::to_chars(buffer, buffer + 32, test_value, 10);
@@ -222,7 +224,7 @@ void micro_benchmark() {
     }
     {
       uint64_t itoss_time = 0;
-      PerformanceTimer timer("\titoss only", itoss_time);
+      performance::timer timer("\titoss only", itoss_time);
       for (unsigned i = 0; i < iteration; i++) {
         char buffer[32]{};
         auto [ptr, len] = toy::itoss(buffer, 32, test_value, 10);
@@ -231,52 +233,55 @@ void micro_benchmark() {
     }
     {
       uint64_t itoss_time = 0;
-      PerformanceTimer timer("\tcopy n itoss only", itoss_time);
+      performance::timer timer("\tcopy n itoss only", itoss_time);
       for (unsigned i = 0; i < iteration; i++) {
         char buffer[32]{};
         auto [ptr, len] = toy::itoss(buffer, 32, test_value, 10);
-        str::u8 buffer_content;
+        // str::u8 buffer_content;
+        toy::format_output_context buffer_content;
         buffer_content.reserve(128);
         toy::format_output out(buffer_content);
         out.put(ptr, len);
         (void)out;
       }
     }
-    // {
-    //   uint64_t itoss_time = 0;
-    //   PerformanceTimer timer("\tcopy 3 times itoss only", itoss_time);
-    //   str::u8 buffer_content;
-    //   toy::format_output out(buffer_content);
-    //   for (unsigned i = 0; i < iteration; i++) {
-    //     for(int j = 0; j < 3; j++){
-    //       char buffer[32]{};
-    //       auto [ptr, len] = toy::itoss(buffer, 32, test_value, 10);
-    //       out.put(ptr, len);
-    //     }
-    //     (void)out;
-    //
-    //   }
-    // }
-    //
-    // {
-    //   uint64_t itoss_time = 0;
-    //   PerformanceTimer timer("\tcopy 3 times toy::detail::format_integer_impl", itoss_time);
-    //   str::u8 buffer_content;
-    //   toy::format_output out(buffer_content);
-    //   toy::format_spec spec;
-    //   spec.type = 'd';
-    //   for (unsigned i = 0; i < iteration; i++) {
-    //     for(int j = 0; j < 3; j++){
-    //       toy::detail::format_integer_impl(out, test_value, spec);
-    //     }
-    //     (void)out;
-    //
-    //   }
-    // }
+    {
+      uint64_t itoss_time = 0;
+      performance::timer timer("\tcopy 3 times itoss only", itoss_time);
+      // str::u8 buffer_content;
+      toy::format_output_context buffer_content;
+      toy::format_output out(buffer_content);
+      for (unsigned i = 0; i < iteration; i++) {
+        for(int j = 0; j < 3; j++){
+          char buffer[32]{};
+          auto [ptr, len] = toy::itoss(buffer, 32, test_value, 10);
+          out.put(ptr, len);
+        }
+        (void)out;
+
+      }
+    }
+
+    {
+      uint64_t itoss_time = 0;
+      performance::timer timer("\tcopy 3 times toy::detail::format_integer_impl", itoss_time);
+      // str::u8 buffer_content;
+      toy::format_output_context buffer_content;
+      toy::format_output out(buffer_content);
+      toy::format_spec spec;
+      spec.type = 'd';
+      for (unsigned i = 0; i < iteration; i++) {
+        for(int j = 0; j < 3; j++){
+          toy::detail::format_integer_impl(out, test_value, spec);
+        }
+        (void)out;
+
+      }
+    }
 
     {
       uint64_t toy_format_time = 0;
-      PerformanceTimer timer("\ttoy::format", toy_format_time);
+      performance::timer timer("\ttoy::format", toy_format_time);
       for (unsigned i = 0; i < iteration; i++) {
         auto s = toy::format("{}", test_value);
         (void)s;
@@ -284,52 +289,76 @@ void micro_benchmark() {
     }
     {
       uint64_t fmt_format_time = 0;
-      PerformanceTimer timer("\tfmt::format", fmt_format_time);
+      performance::timer timer("\tfmt::format", fmt_format_time);
       for (unsigned i = 0; i < iteration; i++) {
         auto s = fmt::format("{}", test_value);
         (void)s;
       }
     }
+    uint64_t toy_format_time = 0;
     {
-      uint64_t toy_format_time = 0;
-      PerformanceTimer timer("\ttoy::format multity", toy_format_time);
+      performance::timer timer("\ttoy::format multity {} {} {}", toy_format_time);
       for (unsigned i = 0; i < iteration; i++) {
-        auto s = toy::format("{} {} {}", test_value, test_value, test_value);
+        auto s = toy::format("{2} {1} {0}", test_value + 1, test_value + 2, test_value + 3);
         (void)s;
       }
     }
+    uint64_t fmt_format_time = 0;
     {
-      uint64_t fmt_format_time = 0;
-      PerformanceTimer timer("\tfmt::format multity", fmt_format_time);
+      performance::timer timer("\tfmt::format multity {} {} {}", fmt_format_time);
       for (unsigned i = 0; i < iteration; i++) {
-        auto s = fmt::format("{} {} {}", test_value, test_value, test_value);
+        auto s = fmt::format("{2} {1} {0}", test_value + 1, test_value + 2, test_value + 3);
         (void)s;
       }
     }
+    console::writeln("\tdifference: {}", toy_format_time - fmt_format_time);
   }
 }
-int main() {
-  test_all();
 
-  // test_fmt_vs_toy_fmt();
+struct format_spec {
+  format_spec() = default;
+  int16_t width = -1;
+  int16_t precision = -1;
+  unsigned char fill = ' ';
+  unsigned char align = '\0';
+  unsigned char type = '\0';
+  unsigned char sign:6 = '-';
+  bool alternate:2 = false;
+  const char *fmt_beg = nullptr;
+  const char *fmt_end = nullptr;
+  inline str::u8v get_pattern() const {
+    return str::u8v(fmt_beg, fmt_end - fmt_beg);
+  }
+};
+
+
+
+int main() {
+
+  // toy::xbuf x;
+  // x.reserve(100);
+  // x.append("abcd");
+  //
+  // console::writeln("{}", x);
+  // gr::str::u8 ss;
+  // ss.hack_with_cbuf(x.to_cbuf());
+
+  // console::writeln("{}", 123);
+  // test_float_fmt_vs_toy_fmt();
 
   // test_integer_fmt_vs_toy();
 
-  // micro_benchmark();
-
-  // auto b = toy::detail::supports_integer_v<__int128_t>;
+  micro_benchmark();
+  // console::writeln("sizeof spec: {}", sizeof(format_spec));
   //
-  // console::writeln("is_integral_v<__int128> {}", b);
+  // const char* pattern = "test";
+  // format_spec spec{};
+  // spec.type = 'd';
+  // console::writeln("{} {}", spec.type, char(spec.sign));
+  // spec.sign = '+';
+  // spec.fmt_beg = pattern;
+  // console::writeln("{} {}", spec.type, char(spec.sign));
   //
-  // // 测试转义
-  // int i = 10;
-  // console::writeln("{} |{:4d}| |{:2x}|", i, i, i);
-  // console::writeln("{}", std::format("{} |{:4d}| |{:2x}|", i, i, i));
-  // console::writeln("Data: {:.2f} {:s} {:2x} {:.2f} {:s} {:d}", 3.14159 + i, "text", i, 42.5f, 'a', true);
-  // console::writeln("escape {{}} => {} {} {:.2e}", "test", 123, 123.2);
-  // console::writeln("{{{{}}}} => {}", "test");
-  // console::writeln("Literal {{ braces }} and value: {}", 42);
-  // console::writeln("({{:.{{}}f}}, 3.1415926, {1}) => {0:.{1}f}", 3.1415926, 3);
-  // console::writeln("{{Escaped}} and {:.{}f}", 3.1415926, 2);
+  // console::writeln("{:b} {:b} | {:b} {:b} {:b}", '-', '+', '<', '>', '^');
   return 0;
 }

@@ -5,7 +5,7 @@
  */
 
 #include <gr/utf_sequence.hh>
-#include "gr/utils.hh"
+#include <gr/utils.hh>
 #include <gr/string.hh>
 #if GR_HAS_RE2
 #include <re2/re2.h>
@@ -1199,122 +1199,119 @@ auto utf_view<char_type>::word_boundaries() const -> std::vector<uint32_t> {
   return boundaries;
 }
 namespace toy {
-struct string_stack {
-  const char *ptr;
-  size_t size;
-  char ch[16];
+union string_data_gcc_std {
+  struct string_stack {
+    const char *ptr;
+    size_t size;
+    char ch[16];
+  } stack;
+  struct string_heep {
+    const char *ptr;
+    size_t size;
+    size_t cap;
+  }heap;
 };
 
-struct string_heep {
-  const char *ptr;
-  size_t size;
-  size_t cap;
+struct string_data_clang_std {
+  union {
+    unsigned char holder:8;
+    struct {
+      size_t cap;
+      size_t size;
+      char* ch;
+    }heap;
+    struct {
+      unsigned char size;
+      char ch[23];
+    }stack;
+  };
 };
 
-union string_data {
-  string_stack stack;
-  string_heep heap;
-};
-
-struct termux_string_stack {
-  bool in_heap : 1;
-  uint8_t size : 7;
-  char s[23];
-};
-
-struct termux_string_heap {
-  bool in_heap : 1;
-  size_t cap : 63;
-  size_t size;
-  char *ptr;
-};
-
-union termux_string_data {
-  termux_string_stack stack;
-  termux_string_heap heap;
-};
-
-void hack_string_data(void *s, unsigned char_width,
+void hack_string_data(void *string_ref_p, unsigned char_width,
                       gr::utils::cbuf<char> cbuf) {
-#if TERMUX_CLANG_CPP
-  using hack_p = termux_string_data *;
-  auto sp = hack_p(s);
-  bool in_heap = sp->stack.in_heap;
-  if (in_heap) {
-    delete[] sp->heap.ptr;
-  }
-
-  auto bytes = cbuf.bytes();
-  auto n_elem = bytes / char_width;
-
-  constexptr unsigned platform_bytes = 23;
-  size_t n_elem_limit = (platform_bytes >> (char_width / 2));
-
-  if (n_elem < n_elem_limit) {
-    for (int i = 0; i < bytes; i++) {
-      sp->stack.s[i] = cbuf[i];
+  if constexpr (sizeof(std::string) == 24) {
+    using hack_p = string_data_clang_std *;
+    auto sp = hack_p(string_ref_p);
+    bool in_heap = sp->stack.size & 1;
+    if (in_heap) {
+      std::free(sp->heap.ch);
     }
-    sp->stack.s[bytes] = 0;
-    sp->stack.in_heap = false;
-    sp->stack.size = n_elem;
+    auto bytes = cbuf.bytes() - 1;
+    auto n_elem = bytes / char_width;
+
+    constexpr unsigned platform_bytes = 23;
+    size_t n_elem_limit = (platform_bytes >> (char_width / 2));
+
+    if (n_elem < n_elem_limit) {
+      for (int i = 0; i < bytes; i++) {
+        sp->stack.ch[i] = cbuf[i];
+      }
+      sp->stack.ch[bytes] = 0;
+      sp->stack.size = ((n_elem) << 1);
+
+    } else {
+      size_t cap = cbuf.capacity();
+      cap /= char_width;
+
+      auto [data, bytes_] = cbuf.detach();
+
+      sp->heap.cap = cap + 1;
+      sp->holder |= 1;
+      sp->heap.size = n_elem;
+      sp->heap.ch = data;
+    }
   } else {
-    auto [data, bytes_] = cbuf.detach();
-    sp->heap.in_heap = true;
-    sp->heap.cap = ((n_elem + 1) >> 1) + 1;
-    sp->heap.size = n_elem;
-    sp->heap.ptr = data;
+    using hack_p = string_data_gcc_std *;
+    using namespace std;
+    auto sp = hack_p(string_ref_p);
+    bool in_heap = (sp->stack.ptr != sp->stack.ch);
+
+    if (in_heap) {
+      delete[] sp->heap.ptr;
+    }
+
+    size_t cap = cbuf.capacity_bytes() / char_width;
+    auto buf_bytes = cbuf.bytes();
+    size_t n_elem = buf_bytes / char_width - 1;
+
+    if (n_elem > (16 / char_width - 1)) {
+      // cbuf release ownership to std::string...
+      auto [ptr, nbytes] = cbuf.detach();
+      // do move ptr in heap mode
+      sp->heap.ptr = ptr;
+      sp->heap.cap = cap - 1;
+      sp->heap.size = n_elem;
+    } else {
+      // "do copy data in stack mode
+      size_t *order_p = (size_t *)(sp->stack.ch);
+      size_t *buf_p = (size_t *)(cbuf.begin());
+      *order_p = *buf_p;
+      *(++order_p) = *(++buf_p);
+
+      sp->stack.ch[n_elem] = 0;
+      sp->stack.size = n_elem;
+      sp->stack.ptr = sp->stack.ch;
+    }
   }
-#else
-  using hack_p = string_data *;
-  using namespace std;
-  auto sp = hack_p(s);
-  // bool in_heap = (size_t(sp->stack.ptr) != size_t(sp->stack.ch));
-  bool in_heap = (sp->stack.ptr != sp->stack.ch);
-
-  if (in_heap) {
-    delete[] sp->heap.ptr;
-  }
-
-  auto buf_bytes = cbuf.bytes();
-  size_t n_elem = buf_bytes / char_width;
-
-  if (n_elem > (16 / char_width - 1)) {
-    // cbuf release ownership to std::string...
-    auto [p, nbytes] = cbuf.detach();
-    // do move ptr in heap mode
-    sp->heap.ptr = p;
-    sp->heap.cap = n_elem;
-    sp->heap.size = n_elem;
-  } else {
-    // "do copy data in stack mode
-    size_t *order_p = (size_t *)(sp->stack.ch);
-    size_t *buf_p = (size_t *)(cbuf.begin());
-    *order_p = *buf_p;
-    *(++order_p) = *(++buf_p);
-
-    sp->stack.ch[n_elem] = 0;
-    sp->stack.size = n_elem;
-    sp->stack.ptr = sp->stack.ch;
-  }
-#endif
 }
 
-void hack_string_size(void *s, size_t n) {
-#if TERMUX_CLANG_CPP
-  using hack_p = termux_string_data *;
-  auto sp = hack_p(s);
-  if (sp->stack.in_heap) {
-    sp->heap.size = n;
+void hack_string_size(void *string_ref_p, size_t n) {
+  if constexpr (sizeof(std::string) == 24) {
+    using hack_p = string_data_clang_std *;
+    auto sp = hack_p(string_ref_p);
+    if (sp->holder & 1) {
+      sp->heap.size = n;
+    } else {
+      sp->stack.size = n;
+    }
   } else {
+    using hack_p = string_data_gcc_std *;
+    using namespace std;
+    auto sp = hack_p(string_ref_p);
     sp->stack.size = n;
   }
-#else
-  using hack_p = string_data *;
-  using namespace std;
-  auto sp = hack_p(s);
-  sp->stack.size = n;
-#endif
 }
+
 } // namespace toy
 
 namespace bom {
