@@ -1,7 +1,7 @@
-#include <gr/utf_iter.hh>
+#include <gr/utf.iter.hh>
 #include <gr/console.hh>
 #include <gr/string.hh>
-#include <gr/utf_sequence.hh>
+#include <gr/utf.sequence.hh>
 #include <gr/performance.hh>
 #include <random>
 using namespace std;

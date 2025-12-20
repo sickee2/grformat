@@ -132,8 +132,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <gr/config.hh>
-#include <gr/utf_iter.hh>
-#include <gr/utf_sequence.hh>
+#include <gr/utf.iter.hh>
+#include <gr/utf.sequence.hh>
 #include <gr/utils.hh>
 #include <initializer_list>
 #include <memory>

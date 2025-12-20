@@ -1,5 +1,5 @@
 #include "gr/string.hh"
-#include "gr/utf_sequence.hh"
+#include "gr/utf.sequence.hh"
 #include <chrono>
 #include <iostream>
 #include <random>

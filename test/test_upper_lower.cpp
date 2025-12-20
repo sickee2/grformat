@@ -1,4 +1,4 @@
-#include <gr/utf_sequence.hh>
+#include <gr/utf.sequence.hh>
 #include <cassert>
 #include <iostream>
 #include <vector>

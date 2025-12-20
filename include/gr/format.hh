@@ -127,7 +127,7 @@
 #include <tuple>
 #include <utility>
 
-#include <gr/detail/toy_charconv.hh>
+#include <gr/detail/toy.charconv.hh>
 
 namespace gr {
 namespace toy {

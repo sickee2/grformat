@@ -2,7 +2,7 @@
 #include <fstream>
 #include <gr/console.hh>
 #include <gr/string.hh>
-#include <gr/utf_sequence.hh>
+#include <gr/utf.sequence.hh>
 #include <iostream>
 using namespace std;
 

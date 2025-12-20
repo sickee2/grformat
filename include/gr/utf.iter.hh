@@ -105,7 +105,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <cstdint>
-#include <gr/utf_sequence.hh>
+#include <gr/utf.sequence.hh>
 #include <gr/utils.hh>
 #include <iostream>
 #if GR_HAS_CPP20
