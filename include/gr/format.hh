@@ -1782,12 +1782,15 @@ private:
   // Type trait to check if a type is supported for string formatting
   template<typename T>
   static constexpr bool is_supported_string_v = 
-    std::is_same_v<std::remove_cvref_t<T>, const char*> ||
-    std::is_same_v<std::remove_cvref_t<T>, char*> ||
     std::is_same_v<std::remove_cvref_t<T>, std::string> ||
     std::is_same_v<std::remove_cvref_t<T>, std::string_view> ||
     std::is_same_v<std::remove_cvref_t<T>, gr::str::u8> ||
     std::is_same_v<std::remove_cvref_t<T>, gr::str::u8v>;
+
+  template<typename T>
+  static constexpr bool is_supported_char_point_v = 
+    std::is_same_v<std::remove_cvref_t<T>, const char*> ||
+    std::is_same_v<std::remove_cvref_t<T>, char*>;
 
   // Type trait to check if a type is a pointer
   template<typename T>
@@ -1831,6 +1834,16 @@ private:
           return;
         default:
           throw "gr::toy::format => Invalid type specifier for floating point argument";
+      }
+    } else if constexpr (is_supported_char_point_v<T>) {
+      // String types support: s (default)
+      switch (spec_type) {
+        case 's':
+        case 'p':
+        case '\0': // Default
+          return;
+        default:
+          throw "gr::toy::format => Invalid type specifier for string argument";
       }
     } else if constexpr (is_supported_string_v<T>) {
       // String types support: s (default)
